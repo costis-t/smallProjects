@@ -59,8 +59,9 @@ DT <- fread(file = 'creditcard.csv')
 #### Implementation of the simple Gradient Descent in R  ####
 #############################################################
 
-# # theta: initial guess on regression coef
+# # theta: initial guess on regression coefficients
 # # alpha: initial step scaling factor
+# # max_iterations = 1000 is supposed to prevent some divergences, but it hasn't been required so far in my stress tests, apart from one case.
 GD_R <- function(X, y, theta, alpha, max_iterations = 1000) {
 	delta <- rep(1, ncol(X))
 	old.cost <- sum((X %*% theta - y)^2 * 0.5)/(length(y))
@@ -96,7 +97,7 @@ sourceCpp(file = 'Gradient_Descent_Challenge.cpp')
 # same as in RcppEigen: sourceCpp(file = 'Gradient_Descent_Challenge.cpp')
 
 ###########################################################################
-#### Create the matrices and show the results  ####
+####              Create the matrices and show the results             ####
 ###########################################################################
 
 y <- matrix(DT[, Amount], nrow = nrow(DT), ncol = 1)
@@ -125,7 +126,7 @@ as.vector(gd_eigen$theta)
 
 
 ###########################################################################
-#### Benchmarks  ####
+####                             Benchmarks                            ####
 ###########################################################################
 
 R.way <- function() {
@@ -157,7 +158,7 @@ benchmark(R.way, Cpp.eigen.way, Cpp.armadillo.way, replications = 10^6)
 
 
 ###########################################################################
-#### Plot  ####
+####                                Plot                               ####
 ###########################################################################
 
 

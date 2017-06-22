@@ -20,7 +20,6 @@ using namespace Rcpp;
 using namespace arma;
 using namespace Eigen;
 
-// Translated from R code at https://stackoverflow.com/questions/43217617/estimating-linear-regression-with-gradient-descent-steepest-descent
 
 // [[Rcpp::export]]
 Rcpp::List GD_Cpp_eigen(NumericVector &YR, NumericMatrix &XR, NumericMatrix &thetaR, double alpha = 1, int max_iterations = 1000) {
@@ -79,11 +78,8 @@ Rcpp::List GD_Cpp_arma(const colvec &Y, const mat &X, mat &theta, double alpha =
 		}
 		oldCost = trialCost;
 		theta = trialTheta;
-		//    Rcpp::Rcout << "iteration: " << iteration << ", max: " << max_matrix(0, 0) << std::endl;
 		iteration = iteration + 1;
 		if (iteration == max_iterations)
-			//            Rcpp::Rcout << "iteration: " << iteration << ", max: " << max_iterations << std::endl;
-
 			break;
 	}
 
