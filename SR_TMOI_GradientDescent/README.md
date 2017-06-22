@@ -25,7 +25,7 @@ The dataset is clean, without missing values.
 The R, RcppEigen and RcppArmadillo implementations run for mulltiple regressions, too. Following the challenge, I choose only two variables 2 and Amount.
 The implementations are numerically almost identical to the regression coefficients (`.lm.fit(X, y)$coef`), as I demonstrate in `Gradient_Descent_Challenge.R`.
 
-
+```R
     gd_R$theta
     # [1]  88.34962 -80.49067
 
@@ -37,6 +37,7 @@ The implementations are numerically almost identical to the regression coefficie
     
     .lm.fit(X, y)$coef
     # [1]  88.34962 -80.49135
+```
 
 ## Plot
 [![enter image description here][4]][4]
