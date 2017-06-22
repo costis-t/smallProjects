@@ -8,6 +8,7 @@ library(RcppArmadillo)
 library(RcppEigen)
 library(rbenchmark) 
 library(ggplot2)
+library(utils)
 # library(Hmisc) # optional
 # library(lattice) # optional
 # library(GGally) # optional
@@ -23,6 +24,7 @@ library(ggplot2)
 # Download it and extract it, please, because using library(RCurl) to do it within R requires my credentials (more information at https://stackoverflow.com/questions/35303779/downloading-kaggle-zip-files-in-r )
 # Run the R script in the dataset's folder.
 
+unzip('creditcard.zip')
 system('ls *.csv')
 # creditcard.csv
 
