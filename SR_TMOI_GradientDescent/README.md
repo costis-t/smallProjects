@@ -1,4 +1,4 @@
-# Gradient Descent (Steepest Descent) in R, RcppEigen and Rcpp Armadilo
+# Gradient Descent (Steepest Descent) in R, RcppEigen and RcppArmadilo
 I translate and make some speed improvements of an R implementation for RcppArmadillo and RcppEigen from [stackoverflow][1].
 Since there aren't any complicated/nested loops, using Rcpp* packages has minimal (if any) improvements over R and the differences are only due to small overheads and to the different Basic Linear Algebra Subprograms (BLAS/LAPACK) they use; I have not delved into them, though.
 
