@@ -1,6 +1,18 @@
 #! /bin/R
-
-# Thanks for your videos! They are really fun! :D
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
+# The license holds for every code apart from the main part of the GD_R function which is licensed under cc by-sa 3.0 with attribution to Zheyuan Li and Nico Coallier (https://stackoverflow.com/users/4891738/%e6%9d%8e%e5%93%b2%e6%ba%90-zheyuan-li and https://stackoverflow.com/users/5622715/nico-coallier)
 
 library(data.table)
 library(Rcpp)
