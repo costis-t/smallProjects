@@ -73,7 +73,6 @@ Classes ‘data.table’ and 'data.frame':  1200 obs. of  4 variables:
 #  $ sales    : int  6 119 74 63 49 131 106 137 37 23 ...
 #  - attr(*, ".internal.selfref")=<externalptr> 
 
-
 summary(DT)
 #      date              webvisits           sales       
 # Min.   :2014-01-01   Min.   :   0.00   Min.   :   0.0  
@@ -83,6 +82,12 @@ summary(DT)
 # 3rd Qu.:2016-07-05   3rd Qu.: 338.25   3rd Qu.: 242.5  
 # Max.   :2017-05-01   Max.   :1003.00   Max.   :1010.0  
 ```
+
+Our data sources can have different layouts and some necessary adjustments may be required.
+In our case, we remove the first column, `V1`, and we fix the `date` column which currently is read as a string (among others, converting the numbers from a character string to a `numeric` may also be required for other `.csv` files).
+Of course, we could do the `date` conversion using the appropriate `fread()` option `colClasses` and drop the first column using the `drop` option.
+In the rest of the document I skip such trivial details.
+```r
 DT[, c('V1', 'date') := .(NULL, as.Date(date))]
 str(DT)
 # Classes ‘data.table’ and 'data.frame':  1200 obs. of  3 variables:
@@ -90,8 +95,7 @@ str(DT)
 #  $ webvisits: int  27 25 27 50 44 37 34 39 33 27 ...
 #  $ sales    : int  6 119 74 63 49 131 106 137 37 23 ...
 #  - attr(*, ".internal.selfref")=<externalptr> 
-Our data sources can have different layouts and some necessary adjustments may be required.
-In our case, we remove the first column, `V1`, and we fix the `date` column (among others, converting the numbers from a character string to a `numeric` may also be required for other `.csv` files).
+```
 
 Helicopter view of the data
 ============
