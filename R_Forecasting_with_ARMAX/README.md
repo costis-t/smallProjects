@@ -101,14 +101,16 @@ str(DT)
 #  - attr(*, ".internal.selfref")=<externalptr> 
 ```
 I also create a simple time-series plot to see if everything looks fine.
-
-pdf(file= 'figures/01-simple-sales-graph.pdf')
+```r
+png(file= 'figures/01-simple-sales-graph.pdf')
 plot.ts(DT$sales)
 dev.off()
+```
 
 ![Simple sales graph](figures/01-simple-sales-graph.pdf)
 
- and we are ready to start our analysis!
+Now, we are ready to start our analysis!
+
 Helicopter view of the data
 ============
 As in theory, there seems to be four components in the time series (trend, cycle, seasonal, random). Data are very noisy. 
