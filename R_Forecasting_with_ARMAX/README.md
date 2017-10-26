@@ -204,7 +204,7 @@ figure <- ggplot(DT) +
     geom_rect(data = campaign.dates, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
     geom_point(aes(x = date, y = outliers.NAs)) +
     labs(title = 'The Sales Time-Series',
-         subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.',
+         subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.\nIncludes three smoothing functions with different coarseness.',
          y = 'Sales',
          x = 'Date') + 
     list()
