@@ -204,16 +204,14 @@ figure <-   ggplot(DT) +
 	scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y', date_breaks = '1 year') +
     geom_rect(data = campaign.dates, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
     geom_point(aes(x = date, y = outliers.NAs)) +
-    ggtitle('Sales Time-series') +
-    ylab('Sales') + xlab('Date')+
+    labs(title = 'The Sales Time-Series',
+         subtitle = 'Marketing campaign periods are grayed. Dots correspond to outliers following an uncalibrated Hampel filter.',
+         y = 'Sales',
+         x = 'Date') + 
     list()
 
 ggsave(filename = 'figures/03-sales-graph.png', plot = figure, height = 90, units = 'mm')
 ```
-
-The Sales Time-Series. 
-Marketing campaign periods are grayed. 
-Dots correspond to outliers following an uncalibrated Hampel filter.
 
 ![Sales graph](figures/03-sales-graph.png)
 
