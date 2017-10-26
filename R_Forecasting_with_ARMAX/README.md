@@ -6,6 +6,8 @@ Forecasting with ARMAX
 For the analysis, start by installing the necessary packages.
 This step can be skipped if we have already installed the necessary packages.
 
+imputeTS
+
 ```r
 sapply(c('astsa', 'forecastxgb', 'TStools', 'smooth', 'GDMH', 'caret', 'nnet', 'tsoutliers', 'colorout', 'data.table', 'randomNames', 'xtable', 'lubridate', 'compare', 'ggplot2', 'zoo',
 	 'scales', 'stringr', 'foreach',  'gridExtra',
@@ -86,7 +88,7 @@ summary(DT)
 Our data sources can have different layouts and some necessary adjustments may be required.
 In our case, we remove the first index column, `V1`, and we fix the `date` column which currently is read as a string. Among others, converting the numbers from a character string to a `numeric` may also be required for other `.csv` files.
 Of course, we could do the `date` conversion using the appropriate `fread()` option `colClasses` and drop the first column using the `drop` option.
-In the rest of the document I skip such trivial details.
+In the rest of the document I skip such trivial details and I also take similar steps for both of the time-series (`webvisits` and `sales`) to keep the text short.
 ```r
 DT[, c('V1', 'date') := .(NULL, as.Date(date))]
 ```
@@ -103,11 +105,50 @@ str(DT)
 I also create a simple time-series plot to see if everything looks fine.
 ```r
 png(file= 'figures/01-simple-sales-graph.pdf')
-plot.ts(DT$sales)
+ggplot(data = DT, aes(date, sales)) + geom_line()
 dev.off()
 ```
 
 ![Simple sales graph](figures/01-simple-sales-graph.pdf)
+
+## Data quality
+Let's see if we have any missing values; days with no data.
+Create a sequence of dates from the first till the last day of `DT`.
+```r
+date.grid <- seq(as.Date(min(DT[, date])), as.Date(max(DT[, date])), by = 'day')
+length(date.grid)
+# [1] 1217
+row(DT)
+# [1] 1200
+```
+
+It seems we do have missing values.
+Which are they? 
+R comes with set operation functions (?setdiff) and we can use a set difference to find them.
+```r
+setdiff(as.character(date.grid), as.character(DT$date))
+#  [1] "2014-03-01" "2014-05-07" "2014-05-24" "2014-08-09" "2014-08-13"
+#  [6] "2014-09-07" "2014-09-13" "2014-10-01" "2014-10-11" "2014-10-17"
+# [11] "2014-10-18" "2014-10-19" "2014-10-24" "2014-12-06" "2014-12-21"
+# [16] "2014-12-24" "2015-09-19"
+```
+All in all, we have 17 missing values, located in the first half of the the time series. 
+We observe see noisy seasonality and complex series so we use Kalman filter to impute the missing values (in simpler cases linear interpolation could also be fine).
+Note, that we proceed to interpolation because it does not change the outcome of the analysis! 
+
+```r
+date.grid.DT <- data.table(date = c(date.grid))
+setkeyv(DT, c('date'))
+setkeyv(date.grid.DT, c('date'))
+
+DT <- DT[date.grid.DT]
+
+DT[, c('webvisits.withNA', 'sales.withNA') := .(webvisits, sales)]
+DT[, c('webvisits', 'sales') := .(na.kalman(webvisits), na.kalman(sales))]
+```
+
+![Imputed values for sales graph](figures/02-imputed-values-for-sales-graph.png)
+
 
 Now, we are ready to start our analysis!
 
