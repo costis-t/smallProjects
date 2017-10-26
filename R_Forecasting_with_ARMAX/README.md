@@ -215,5 +215,5 @@ The Sales Time-Series.
 Marketing campaign periods are grayed. 
 Dots correspond to outliers following an uncalibrated Hampel filter.
 
-![Sales graph](figures/02-first-150-imputed-values-for-sales-graph.png)
+![Sales graph](figures/figures/03-sales-graph.png)
 
