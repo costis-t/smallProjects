@@ -254,6 +254,7 @@ For further exploration, Pesaran and Timmermann propose a calculation for the id
 Another possibility would be to consider outlier events, like level shifts, but there is no need for extensive intervention analysis throughout the series for this analysis.
 
 To find out the breaks we work with the `tsoutliers` package in R.
+```r
 my.ts.DT <- DT[, .(date, sales, webvisits)] 
 day.of.year <- as.numeric(format(my.ts.DT[, date][1], '%j'))
 my.ts <- ts(my.ts.DT[, sales], start = c(2014, day.of.year), frequency = 365)
@@ -293,6 +294,8 @@ plot(bp.ri) # for three breaks
 plot(my.ts, type = 'l')
 lines(fitted(bp.ri, breaks = 3), col = 4) # !? 
 lines(confint(bp.ri, breaks = 3))
+```
+
 Hence, we choose the 1034th day of our time-series which corresponds to 30th of October of 2016:
 ```r
 my.ts.DT[1034]
