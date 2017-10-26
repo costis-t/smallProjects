@@ -1,7 +1,33 @@
 # Overview
-
 Forecasting with ARMAX
 
+# R and Data preparation
+## Required R packages
+For the analysis, start by installing the necessary packages.
+This step can be skipped if we have already installed the necessary packages.
+
+```r
+sapply(c('astsa', 'forecastxgb', 'TStools', 'smooth', 'GDMH', 'caret', 'nnet', 'tsoutliers', 'colorout', 'data.table', 'randomNames', 'xtable', 'lubridate', 'compare', 'ggplot2', 'zoo',
+	 'scales', 'stringr', 'foreach',  'gridExtra',
+	 'colorout', 
+	 'tseries', 'urca',
+	 # 'CADFtest',
+	 'fUnitRoots', 
+	 'sos', 
+	 'stats', 
+	 'lmtest', 
+	 #'rasterVis' 
+	 # 'bigalgebra', 'bigmemory', 'biglm',
+	 'pracma', 
+	 'Matrix',# for sparse
+	 'slam', 'prophet', 'RcppArmadillo', 'Rcpp', 'padr',
+	 'parallel', 'foreach', 'doParallel', 'shiny', #'lineprof',
+	 'rbenchmark', 'profvis', 'formula.tools', 'sandwich',
+	 'lattice', 'xts', 'imputeTS', 'strucchange', 'car', 'forecast', 'R.utils', 'GGally', 'zoom', 'TSA', 'foreign'
+# 	 	 ), install.packages) # install packages
+```
+
+Next, load them with: 
 Helicopter view of the data
 ============
 As in theory, there seems to be four components in the time series (trend, cycle, seasonal, random). Data are very noisy. 
