@@ -146,12 +146,12 @@ DT <- DT[date.grid.DT]
 DT[, c('webvisits.withNA', 'sales.withNA') := .(webvisits, sales)]
 DT[, c('webvisits', 'sales') := .(na.kalman(webvisits), na.kalman(sales))]
 
-png(file= 'figures/02-imputed-values-for-sales-graph.png')
+png(file= 'figures/02-first-150-imputed-values-for-sales-graph.png')
 plotNA.imputations(DT[1:150, sales.withNA], DT[1:150, sales], ylab = 'sales', main = 'Visualization of the Imputed Values')
 dev.off()
 ```
 
-![Imputed values for sales graph](figures/02-imputed-values-for-sales-graph.png)
+![Imputed values for sales graph](figures/02-first-150-imputed-values-for-sales-graph.png)
 
 
 Now, we are ready to start our analysis!
