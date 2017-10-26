@@ -157,8 +157,9 @@ dev.off()
 
 Now, we are ready to start our analysis!
 
-Helicopter view of the data
-============
+# Analysis 
+## Helicopter view of the data
+
 As in theory, there seems to be four components in the time series (trend, cycle, seasonal, random). 
 Data are very noisy. 
 Ideally, we'd like to have a large increase during and after the marketing campaings, but this does not happen.
@@ -175,6 +176,7 @@ We don’t see linear, but a polynomial, trend for the whole time-series, which 
 We also see structural breaks (at least in level and variance) which influences the unit root tests and need further exploration. 
 I follow [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract) and the BIC criterion suggests 3 breaks (four would not make a large difference, thouggh) and confirms my visual perception.
 
+## Graph with outliers and smoothing curves
 Let's create a beautiful graph for the data!
 The following figure shows different outliers using the Hampel filter.
 If we are further interested in the outliers, we should proceed to parameter calibration for the Hampel filter, but for this analysis it is not necessary.
@@ -213,4 +215,64 @@ ggsave(filename = 'figures/03-sales-graph.png', plot = figure, height = 90, unit
 ```
 
 ![Sales graph](figures/03-sales-graph.png)
+
+## Statistical characteristics
+I start with correlation analysis.
+
+```r
+png(file= 'figures/04-ACF-and-PACF-of-sales.png')
+tsdisplay(DT[, sales])
+dev.off()
+```
+![ACF and PACF graph](figures/04-ACF-and-PACF-of-sales.png)
+
+The above figure shows that the ACF slope declines smoothly with shallow peaks every 7 periods (days). 
+The peaks after the 7th day can be considered weak statistically, since they can be related to the aforementioned weekly seasonality. 
+The smooth decline is indicative for the existence of a trend. 
+Hence, the ACF implies trend and seasonality. 
+The graph of Figure of the PACF confirms, since the statistical
+significance of the peaks after the 7th period seems week.
+For further analysis, we could also examine lagged cross-correlation between sales and webvisits (prewhitening the series and using the `ccf()` function in R). 
+This would indicate whether people examine thoroughly the product before their order
+
+Moreover, the sales time-series figure of the previous section shows a gradual increase in variance over time while the level of enquiries also increases. 
+This could be an indication of ARCH errors/innovations if it didn’t seem so gradual but clustered. 
+Hence, I could transform the enquiries with a power transformation. 
+This seems to be the best simple transformation. 
+The optimal Box-Cox λ refers to a logarithmic transformation transposes the increased variance position to the beginning of the series.
+For experimentation, please refer to the `BoxCox.lambda()` and `BoxCox()` functions of the `forecast` package in R.
+
+Ideally, we do not want mean, variance, autocorrelation and relationship breaks for the time-series for sound inference. 
+[Hansen (2012)](https://www.ssc.wisc.edu/~bhansen/crete/crete5.pdf) says there is no good theory for forecasting for series with breaks. 
+According to [Pesaran and Timmermann (2007)](https://www.sciencedirect.com/science00/article/pii/S0304407606000418), in not an identical case, however, the optimal window for starts a bit before the last break. 
+Bai and Perron (2003) method indicates considering three breaks as optimal. 
+Even in non optimal cases with 2, 4 or 5 breaks the last break is on 2016-10-30. Hence, I consider 2016-09-01 as the start of my estimation window. 
+For further exploration, Pesaran and Timmermann propose a calculation for the ideal estimation windows which I skip as it does not seem so critical for the purpose of this analysis.
+Another possibility would be to consider outlier events, like level shifts, but there is no need for extensive intervention analysis throughout the series for this analysis.
+
+Various stationarity tests have been performed. 
+Enquiries and sessions for the US seem to be cointegrated by the Johansen test, so stationarity is not an issue.
+The transformed series are stationary under the ADF/PP/KPSS tests. 
+The not-transformed series are obviously not stationary. 
+In rough terms, for the webvisits, there seems to be a parallel movement in 2014-2015, a slightly upward trend during 2015-2016, an abrupt since late 2015/early 2016 which holds till today or has faded after late 2016. 
+ADF, DF-GLS do not indicate a stochastic trend. 
+Nevertheless, there seems to be visually and with a test deterministic trend (enquiries increase by 0.0372453 per day). 
+Note that proper trend analysis in serially correlated series like in our case demands the calculation of Vogelsang ([1998a](https://rmgsc.cr.usgs.gov/outgoing/threshold_articles/Vogelsang1998b.pdf), [1998b](https://www.jstor.org/stable/2527353?seq=1#page_scan_tab_contents)) statistics. 
+Moreover, the series are bounded (take values in [0, 1000]) so the unit root tests make sense.
+The best fit- ted simple ARIMA with seasonality is the ARIMA(1,1,1)(0,0,1)[7] with BIC 1945.06. Ideally, I would proceed to cross-validation/out-of-sample tests and extensive calibration, though. Ljung-Box shows that the residuals can be considered white noise. The port- manteau test does not reveal serial correlation for the first 20 lags of the model and I go forward to forecasting.
+
+ For the transformed series, the best fitted ARMA without seasonality is the ARMA(2,0,1) with
+AIC and BIC 3486.16 and 3511.62, respectively. The best fitted ARMA with seasonality is the
+ARMA(4,0,3)(0,0,2)[7] with AIC and BIC 3454.38 and 3510.3, respectively. At this stage without a possi-
+bility for cross-validation/out-of-sample tests, I would choose the ARMA(2,0,1) for conservative reasons:
+it is simpler, the AIC/BIC of the two are very close and ARIMA(4,0,3)(0,0,2)[7] may be prone to overfit-
+ting. However, for the purposes of this particular analysis and its constraints I do not make any transforma-
+tion calibration (when required I ’ll automate this process).
+
+Note that ARIMA-based intervals are generally too narrow and that historical patterns will repeat for the forecasting period.
+
+
+
+
+
 
