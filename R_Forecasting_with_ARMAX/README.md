@@ -173,7 +173,7 @@ The following Figure shows that the `sales` seem to follow:
 This suggest that a regime-switching model could also be appropriate for such data. 
 We don’t see linear, but a polynomial, trend for the whole time-series, which is common for sales data. 
 We also see structural breaks (at least in level and variance) which influences the unit root tests and need further exploration. 
-I follow Bai and Perron (2003) and the BIC criterion suggests 3 breaks (four would not make a large difference, thouggh) and confirms my visual perception.
+I follow [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract) and the BIC criterion suggests 3 breaks (four would not make a large difference, thouggh) and confirms my visual perception.
 
 Let's create a beautiful graph for the data!
 The following figure shows different outliers using the Hampel filter.
@@ -185,8 +185,7 @@ At a more advanced stage, we could use a non-linear moving window and parameter 
 The following figure, also includes three smoothing functions with different coarseness, following a LOESS fitted curve with correspondingly different parameters.
 
 ```r
-campaign.dates <- data.frame(
-                            campaign.start =  c(as.Date('2016-01-23'),
+campaign.dates <- data.frame(campaign.start =  c(as.Date('2016-01-23'),
                                                 as.Date('2016-09-15'),
 					                            as.Date('2016-11-25'),
 					                            as.Date('2017-01-25')
@@ -196,7 +195,7 @@ campaign.dates <- data.frame(
 					                            as.Date('2016-11-29'),
 					                            as.Date('2017-02-03')))
 
-figure <-   ggplot(DT) +
+figure <- ggplot(DT) +
 	geom_line(aes(x = date, y = sales), colour = 'red', size = 0.1, alpha = 0.7) +
 	geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.3)$fit), colour = 'darkgreen',  size = 1) +
 	geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.05)$fit), colour = 'blue',  size = 0.4) +
@@ -205,7 +204,7 @@ figure <-   ggplot(DT) +
     geom_rect(data = campaign.dates, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
     geom_point(aes(x = date, y = outliers.NAs)) +
     labs(title = 'The Sales Time-Series',
-         subtitle = 'Marketing campaign periods are grayed. Dots correspond to outliers following an uncalibrated Hampel filter.',
+         subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.',
          y = 'Sales',
          x = 'Date') + 
     list()
