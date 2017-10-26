@@ -310,8 +310,42 @@ plot(efp(my.ts ~ 1, type = 'Rec-CUSUM'))
 plot(efp(my.ts ~ 1, type = 'OLS-CUSUM'))
 ```
 
+```r
+my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 365)
+plot.ts(my.ts)
+
+campaign.dates.truncated <- data.frame(
+				   campaign.start =  c(
+						   #                 as.Date('2016-01-23'),
+						   as.Date('2016-09-15'),
+						   as.Date('2016-11-25'),
+						   as.Date('2017-01-25')
+						   ), campaign.end = c(
+						   #                 as.Date('2016-02-01'),
+						   as.Date('2016-09-23'),
+						   as.Date('2016-11-29'),
+						   as.Date('2017-02-03')))
+
+
+figure <-   ggplot(DT[date >= '2016-09-01']) +
+	geom_line(aes(x = date, y = sales), colour = 'red', size = 0.4, alpha = 0.7)  +
+	geom_rect(data = campaign.dates.truncated, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
+
+	#              scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y',
+	scale_x_date( date_minor_breaks = '1 week',  date_labels = '%m - %Y', # http://strftime.org/
+		     date_breaks = '1 month'                        ) +
+#             geom_point(aes(x = date, y = outliers.NAs)) +
+ggtitle('Sales, estimation window') +
+ylab('Sales') + xlab('Date')+
+list()
+
+ggsave(filename = 'figures/10-estimation-window-graph.png', plot = figure, height = 100, units = 'mm')
+```
+
+![Sales Estimation Window](figures/10-estimation-window-graph.png)
+
 ### Stationarity
-We must also perform stationarity tests (see `adf.test()`, `pp.test()`, `kpss.test()` of the `tseries package in R). 
+We must also perform stationarity tests (see `adf.test()`, `pp.test()`, `kpss.test()` of the `tseries` package in R). 
 Sales and Web Visits seem to be cointegrated by the Johansen test (see `ca.jo()` of the `urca` package in R), so stationarity is not an issue.
 The transformed series are stationary under the ADF/PP/KPSS tests. 
 The not-transformed series are obviously not stationary. 
@@ -326,15 +360,23 @@ Moreover, the series are bounded (take values in [0, 1000]) so the unit root tes
 ts.DT <- DT[, .(date, sales, webvisits)] 
 
 
-The best fitted simple ARIMA with seasonality is the ARIMA(1,1,1)(0,0,1)[7] with BIC 1945.06. Ideally, I would proceed to cross-validation/out-of-sample tests and extensive calibration, though. Ljung-Box shows that the residuals can be considered white noise. The port- manteau test does not reveal serial correlation for the first 20 lags of the model and I go forward to forecasting.
+The best fitted simple ARIMA with seasonality is the ARIMA(1,1,1)(0,0,1)[7] with BIC 1945.06. Ideally, I would proceed to cross-validation/out-of-sample tests and extensive calibration, though. Ljung-Box shows that the residuals can be considered white noise. 
+The portmanteau test does not reveal serial correlation for the first 20 lags of the model and I go forward to forecasting.
 
- For the transformed series, the best fitted ARMA without seasonality is the ARMA(2,0,1) with
-AIC and BIC 3486.16 and 3511.62, respectively. The best fitted ARMA with seasonality is the
-ARMA(4,0,3)(0,0,2)[7] with AIC and BIC 3454.38 and 3510.3, respectively. At this stage without a possi-
-bility for cross-validation/out-of-sample tests, I would choose the ARMA(2,0,1) for conservative reasons:
-it is simpler, the AIC/BIC of the two are very close and ARIMA(4,0,3)(0,0,2)[7] may be prone to overfit-
-ting. However, for the purposes of this particular analysis and its constraints I do not make any transforma-
-tion calibration (when required I ’ll automate this process).
+```r
+estimation.window.DT <- my.ts.DT[date >= '2016-09-01']
+estimation.window.sales <- ts(estimation.window.DT[, sales], start = 0, frequency = 7)
+auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 2, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 2, trace = FALSE, stepwise = TRUE, max.order = 20, allowmean = TRUE, ic = 'bic')
+```
+
+I only mention some highlights of further experimentation, to conserve space. 
+For the transformed series, the best fitted ARMA without seasonality is the ARMA(2,0,1). 
+The best fitted ARMA with seasonality is the ARMA(4,0,3)(0,0,2)[7]. 
+For this analysis, I skip cross-validation/out-of-sample tests, to conserve space.
+I would choose the ARMA(2,0,1) for conservative reasons:
+it is simpler, the AIC/BIC of the two are very close and ARIMA(4,0,3)(0,0,2)[7] may be prone to overfitting. 
+However, for the purposes of this particular analysis and its constraints I do not make any transformation calibration. 
+For the purposes of accurate work, such analyses are advised to be automated through a [make-type-of-file](https://robjhyndman.com/hyndsight/makefiles/) or a master script.
 
 Note that ARIMA-based intervals are generally too narrow and that historical patterns will repeat for the forecasting period.
 
