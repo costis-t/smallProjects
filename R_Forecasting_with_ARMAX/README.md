@@ -89,6 +89,10 @@ Of course, we could do the `date` conversion using the appropriate `fread()` opt
 In the rest of the document I skip such trivial details.
 ```r
 DT[, c('V1', 'date') := .(NULL, as.Date(date))]
+```
+
+Now we have the following `DT` and we are ready to start our analysis!
+```r
 str(DT)
 # Classes ‘data.table’ and 'data.frame':  1200 obs. of  3 variables:
 #  $ date     : Date, format: "2014-01-01" "2014-01-02" ...
