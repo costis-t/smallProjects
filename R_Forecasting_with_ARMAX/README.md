@@ -1,6 +1,6 @@
 # Overview
 In this sample, I analyze a sales time-series and I identify whether there is a permanent impact of marketing campaigns on a sales time-series.
-I also forecast the sales time-series for an imminent marketing campaing using AMRAX modelling.
+I also forecast the sales time-series for one month with and without an imminent marketing campaing using ARMAX modelling.
 
 
 # R and Data preparation
@@ -384,4 +384,15 @@ Note that ARIMA-based intervals are generally too narrow and that historical pat
 
 
 
+# Expansions
+The above analysis is obviously preliminary, especially for time series that deal with thousands/millions of sales and there are a lot at stake.
+The general analytical path could be consisted of these steps:
+ * visual inspection, standard statistical tests
+ * identify the best time series model, try to encompass various relevant variables that should influence the sales
+ * compare it with other types of models as bayesian structural time series models (see the [CausalImpact](https://google.github.io/CausalImpact/CausalImpact.html) package in R), machine learning/xgb/etc. models 
+ * identify causal relationships among the time-series, etc...
+ * perform out-of-sample analysis/cross-validation
+ * automate the process and create potential automatic report generation through the
+power of R or/and python. The goal is to have automatic predictions for every
+segment of the market, as real-time as possible, for various metrics and time-series.
 
