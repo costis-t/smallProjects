@@ -187,7 +187,7 @@ The following figure, also includes three smoothing functions with different coa
 ```r
 campaign.dates <- data.frame(campaign.start =  c(as.Date('2016-01-23'),
                                                 as.Date('2016-09-15'),
-					                            as.Date('2016-11-25'),
+                                                as.Date('2016-11-25'),
 					                            as.Date('2017-01-25')
 					                            ), campaign.end = c(
 					                            as.Date('2016-02-01'),
