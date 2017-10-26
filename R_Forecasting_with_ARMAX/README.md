@@ -84,14 +84,14 @@ summary(DT)
 ```
 
 Our data sources can have different layouts and some necessary adjustments may be required.
-In our case, we remove the first column, `V1`, and we fix the `date` column which currently is read as a string (among others, converting the numbers from a character string to a `numeric` may also be required for other `.csv` files).
+In our case, we remove the first index column, `V1`, and we fix the `date` column which currently is read as a string. Among others, converting the numbers from a character string to a `numeric` may also be required for other `.csv` files.
 Of course, we could do the `date` conversion using the appropriate `fread()` option `colClasses` and drop the first column using the `drop` option.
 In the rest of the document I skip such trivial details.
 ```r
 DT[, c('V1', 'date') := .(NULL, as.Date(date))]
 ```
 
-Now we have the following `DT` and we are ready to start our analysis!
+Now we have the following `DT`
 ```r
 str(DT)
 # Classes ‘data.table’ and 'data.frame':  1200 obs. of  3 variables:
@@ -100,7 +100,15 @@ str(DT)
 #  $ sales    : int  6 119 74 63 49 131 106 137 37 23 ...
 #  - attr(*, ".internal.selfref")=<externalptr> 
 ```
+I also create a simple time-series plot to see if everything looks fine.
 
+pdf(file= 'figures/01-simple-sales-graph.pdf')
+plot.ts(DT$sales)
+dev.off()
+
+![Simple sales graph](figures/01-simple-sales-graph.pdf)
+
+ and we are ready to start our analysis!
 Helicopter view of the data
 ============
 As in theory, there seems to be four components in the time series (trend, cycle, seasonal, random). Data are very noisy. 
