@@ -24,10 +24,40 @@ sapply(c('astsa', 'forecastxgb', 'TStools', 'smooth', 'GDMH', 'caret', 'nnet', '
 	 'parallel', 'foreach', 'doParallel', 'shiny', #'lineprof',
 	 'rbenchmark', 'profvis', 'formula.tools', 'sandwich',
 	 'lattice', 'xts', 'imputeTS', 'strucchange', 'car', 'forecast', 'R.utils', 'GGally', 'zoom', 'TSA', 'foreign'
-# 	 	 ), install.packages) # install packages
+	 ), install.packages) # install packages
 ```
 
-Next, load them with: 
+Next, load them with:
+```r
+sapply(c('astsa', 'forecastxgb', 'TStools', 'smooth', 'GDMH', 'caret', 'nnet', 'tsoutliers', 'colorout', 'data.table', 'randomNames', 'xtable', 'lubridate', 'compare', 'ggplot2', 'zoo',
+	 'scales', 'stringr', 'foreach',  'gridExtra',
+	 'colorout', 
+	 'tseries', 'urca',
+	 # 'CADFtest',
+	 'fUnitRoots', 
+	 'sos', 
+	 'stats', 
+	 'lmtest', 
+	 #'rasterVis' 
+	 # 'bigalgebra', 'bigmemory', 'biglm',
+	 'pracma', 
+	 'Matrix',# for sparse
+	 'slam', 'prophet', 'RcppArmadillo', 'Rcpp', 'padr',
+	 'parallel', 'foreach', 'doParallel', 'shiny', #'lineprof',
+	 'rbenchmark', 'profvis', 'formula.tools', 'sandwich',
+	 'lattice', 'xts', 'imputeTS', 'strucchange', 'car', 'forecast', 'R.utils', 'GGally', 'zoom', 'TSA', 'foreign'
+	 ), require, character.only = TRUE) # load packages
+```
+
+## Loading the data series
+I have saved the data series as `data/anonymized-forecasting-data.csv`.
+We can confirm this within R (under a Linux OS):
+
+```r
+system('ls data/*.csv')
+# data/anonymized-forecasting-data.csv
+```
+
 Helicopter view of the data
 ============
 As in theory, there seems to be four components in the time series (trend, cycle, seasonal, random). Data are very noisy. 
