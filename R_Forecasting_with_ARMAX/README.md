@@ -217,6 +217,8 @@ ggsave(filename = 'figures/03-sales-graph.png', plot = figure, height = 90, unit
 ![Sales graph](figures/03-sales-graph.png)
 
 ## Statistical characteristics
+### Autocorrelation structure
+
 I start with correlation analysis.
 
 ```r
@@ -230,18 +232,19 @@ The above figure shows that the ACF slope declines smoothly with shallow peaks e
 The peaks after the 7th day can be considered weak statistically, since they can be related to the aforementioned weekly seasonality. 
 The smooth decline is indicative for the existence of a trend. 
 Hence, the ACF implies trend and seasonality. 
-The graph of Figure of the PACF confirms, since the statistical
+The graph of the PACF confirms, since the statistical
 significance of the peaks after the 7th period seems week.
-For further analysis, we could also examine lagged cross-correlation between sales and webvisits (prewhitening the series and using the `ccf()` function in R). 
-This would indicate whether people examine thoroughly the product before their order
+For further analysis, we could also examine lagged cross-correlation between `sales` and `webvisits` (prewhitening the series and using the `ccf()` function in R). 
+This would indicate whether people examine thoroughly the product before their order.
 
-Moreover, the sales time-series figure of the previous section shows a gradual increase in variance over time while the level of enquiries also increases. 
+Moreover, the sales time-series graph of the previous section shows a gradual increase in variance over time while the level of enquiries also increases. 
 This could be an indication of ARCH errors/innovations if it didn’t seem so gradual but clustered. 
 Hence, I could transform the enquiries with a power transformation. 
 This seems to be the best simple transformation. 
-The optimal Box-Cox λ refers to a logarithmic transformation transposes the increased variance position to the beginning of the series.
+The optimal Box-Cox λ refers to a logarithmic transformation and transposes the increased variance position to the beginning of the series.
 For experimentation, please refer to the `BoxCox.lambda()` and `BoxCox()` functions of the `forecast` package in R.
 
+### Breaks
 Ideally, we do not want mean, variance, autocorrelation and relationship breaks for the time-series for sound inference. 
 [Hansen (2012)](https://www.ssc.wisc.edu/~bhansen/crete/crete5.pdf) says there is no good theory for forecasting for series with breaks. 
 According to [Pesaran and Timmermann (2007)](https://www.sciencedirect.com/science00/article/pii/S0304407606000418), in not an identical case, however, the optimal window for starts a bit before the last break. 
@@ -250,16 +253,77 @@ Even in non optimal cases with 2, 4 or 5 breaks the last break is on 2016-10-30.
 For further exploration, Pesaran and Timmermann propose a calculation for the ideal estimation windows which I skip as it does not seem so critical for the purpose of this analysis.
 Another possibility would be to consider outlier events, like level shifts, but there is no need for extensive intervention analysis throughout the series for this analysis.
 
-Various stationarity tests have been performed. 
-Enquiries and sessions for the US seem to be cointegrated by the Johansen test, so stationarity is not an issue.
+To find out the breaks we work with the `tsoutliers` package in R.
+my.ts.DT <- DT[, .(date, sales, webvisits)] 
+day.of.year <- as.numeric(format(my.ts.DT[, date][1], '%j'))
+my.ts <- ts(my.ts.DT[, sales], start = c(2014, day.of.year), frequency = 365)
+outliers.tso <- tso(my.ts) # it takes some minutes
+plot(outliers.tso)
+bp.ri <- breakpoints(my.ts ~ 1)
+summary(bp.ri)
+# 
+#          Optimal (m+1)-segment partition: 
+# 
+# Call:
+# breakpoints.formula(formula = my.ts ~ 1)
+# 
+# Breakpoints at observation number:
+#                             
+# m = 1                   985 
+# m = 2           742     1034
+# m = 3       481     839 1034
+# m = 4   213 481     839 1034
+# m = 5   213 481 663 845 1034
+# 
+# Corresponding to breakdates:
+#                                                          
+# m = 1                                           2016(255)
+# m = 2                       2016(12)            2016(304)
+# m = 3             2015(116)           2016(109) 2016(304)
+# m = 4   2014(213) 2015(116)           2016(109) 2016(304)
+# m = 5   2014(213) 2015(116) 2015(298) 2016(115) 2016(304)
+# 
+# Fit:
+#                                                          
+# m   0        1        2        3        4        5       
+# RSS 36382654 13979836 10330573  9390829  9328042  9281676
+# BIC    16010    14860    14506    14404    14410    14418
+
+plot(bp.ri) # for three breaks
+plot(my.ts, type = 'l')
+lines(fitted(bp.ri, breaks = 3), col = 4) # !? 
+lines(confint(bp.ri, breaks = 3))
+Hence, we choose the 1034th day of our time-series which corresponds to 30th of October of 2016:
+```r
+my.ts.DT[1034]
+#          date sales webvisits
+# 1: 2016-10-30   273       455
+```
+For further exploration, the `strucchange` package in R is a good starting point.
+Example graphs:
+```r
+plot(Fstats(my.ts ~ 1))
+plot(efp(my.ts ~ 1, type = 'Rec-CUSUM'))
+plot(efp(my.ts ~ 1, type = 'OLS-CUSUM'))
+```
+
+### Stationarity
+We must also perform stationarity tests (see `adf.test()`, `pp.test()`, `kpss.test()` of the `tseries package in R). 
+Sales and Web Visits seem to be cointegrated by the Johansen test (see `ca.jo()` of the `urca` package in R), so stationarity is not an issue.
 The transformed series are stationary under the ADF/PP/KPSS tests. 
 The not-transformed series are obviously not stationary. 
-In rough terms, for the webvisits, there seems to be a parallel movement in 2014-2015, a slightly upward trend during 2015-2016, an abrupt since late 2015/early 2016 which holds till today or has faded after late 2016. 
+In rough terms, for the Web Visits, there seems to be a parallel movement in 2014-2015, a slightly upward trend during 2015-2016, an abrupt since late 2015/early 2016 which holds till today or has faded after late 2016. 
 ADF, DF-GLS do not indicate a stochastic trend. 
-Nevertheless, there seems to be visually and with a test deterministic trend (enquiries increase by 0.0372453 per day). 
+Nevertheless, there seems to be visually and with a test deterministic trend (`sales` increase by 0.372453 per day (`summary(lm(DT[, sales] ~ seq(1:length(DT[, sales]))))`)). 
 Note that proper trend analysis in serially correlated series like in our case demands the calculation of Vogelsang ([1998a](https://rmgsc.cr.usgs.gov/outgoing/threshold_articles/Vogelsang1998b.pdf), [1998b](https://www.jstor.org/stable/2527353?seq=1#page_scan_tab_contents)) statistics. 
 Moreover, the series are bounded (take values in [0, 1000]) so the unit root tests make sense.
-The best fit- ted simple ARIMA with seasonality is the ARIMA(1,1,1)(0,0,1)[7] with BIC 1945.06. Ideally, I would proceed to cross-validation/out-of-sample tests and extensive calibration, though. Ljung-Box shows that the residuals can be considered white noise. The port- manteau test does not reveal serial correlation for the first 20 lags of the model and I go forward to forecasting.
+
+## ARIMA modelling
+
+ts.DT <- DT[, .(date, sales, webvisits)] 
+
+
+The best fitted simple ARIMA with seasonality is the ARIMA(1,1,1)(0,0,1)[7] with BIC 1945.06. Ideally, I would proceed to cross-validation/out-of-sample tests and extensive calibration, though. Ljung-Box shows that the residuals can be considered white noise. The port- manteau test does not reveal serial correlation for the first 20 lags of the model and I go forward to forecasting.
 
  For the transformed series, the best fitted ARMA without seasonality is the ARMA(2,0,1) with
 AIC and BIC 3486.16 and 3511.62, respectively. The best fitted ARMA with seasonality is the
