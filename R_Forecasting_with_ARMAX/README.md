@@ -49,7 +49,7 @@ sapply(c('astsa', 'forecastxgb', 'TStools', 'smooth', 'GDMH', 'caret', 'nnet', '
 	 ), require, character.only = TRUE) # load packages
 ```
 
-## Loading the data series
+## Loading and preparing the data series
 I have saved the data series as `data/anonymized-forecasting-data.csv`.
 We can confirm this within R (under a Linux OS):
 
@@ -57,6 +57,41 @@ We can confirm this within R (under a Linux OS):
 system('ls data/*.csv')
 # data/anonymized-forecasting-data.csv
 ```
+
+Using the amazing `data.table` package we import the data as a `DT` `data.table` object:
+```r
+DT <- fread('data/anonymized-forecasting-data.csv')
+```
+
+It's a good idea to check the structure and summary of the object.
+```r
+str(DT)
+Classes ‘data.table’ and 'data.frame':  1200 obs. of  4 variables:
+#  $ V1       : chr  "1" "2" "3" "4" ...
+#  $ date     : chr  "2014-01-01" "2014-01-02" "2014-01-03" "2014-01-04" ...
+#  $ webvisits: int  27 25 27 50 44 37 34 39 33 27 ...
+#  $ sales    : int  6 119 74 63 49 131 106 137 37 23 ...
+#  - attr(*, ".internal.selfref")=<externalptr> 
+
+
+summary(DT)
+#      date              webvisits           sales       
+# Min.   :2014-01-01   Min.   :   0.00   Min.   :   0.0  
+# 1st Qu.:2014-11-09   1st Qu.:  70.75   1st Qu.:  57.0  
+# Median :2015-09-08   Median : 129.00   Median : 123.0  
+# Mean   :2015-09-05   Mean   : 229.59   Mean   : 178.9  
+# 3rd Qu.:2016-07-05   3rd Qu.: 338.25   3rd Qu.: 242.5  
+# Max.   :2017-05-01   Max.   :1003.00   Max.   :1010.0  
+```
+DT[, c('V1', 'date') := .(NULL, as.Date(date))]
+str(DT)
+# Classes ‘data.table’ and 'data.frame':  1200 obs. of  3 variables:
+#  $ date     : Date, format: "2014-01-01" "2014-01-02" ...
+#  $ webvisits: int  27 25 27 50 44 37 34 39 33 27 ...
+#  $ sales    : int  6 119 74 63 49 131 106 137 37 23 ...
+#  - attr(*, ".internal.selfref")=<externalptr> 
+Our data sources can have different layouts and some necessary adjustments may be required.
+In our case, we remove the first column, `V1`, and we fix the `date` column (among others, converting the numbers from a character string to a `numeric` may also be required for other `.csv` files).
 
 Helicopter view of the data
 ============
