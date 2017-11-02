@@ -365,7 +365,7 @@ figure <-   ggplot(DT[date >= '2016-09-01']) +
 	scale_x_date( date_minor_breaks = '1 week',  date_labels = '%m - %Y', # http://strftime.org/
 		     date_breaks = '1 month'                        ) +
 #             geom_point(aes(x = date, y = outliers.NAs)) +
-ggtitle('Sales, estimation window') +
+ggtitle('5. Sales, estimation window') +
 ylab('Sales') + xlab('Date')+
 list()
 
@@ -397,28 +397,114 @@ kpss.test(my.ts)
 # KPSS Level = 2.8092, Truncation lag parameter = 3, p-value = 0.01 # null of stationarity is rejected at 0.05
 ```
 
-The stationarity tests do not indicate a stochastic.
+The stationarity tests do not indicate a stochastic trend.
 Nevertheless, there seems to be visually and with a test deterministic trend (`sales` increase by 0.372453 per day (`summary(lm(DT[, sales] ~ seq(1:length(DT[, sales]))))`)). 
 Note that proper trend analysis in serially correlated series like in our case demands the calculation of Vogelsang ([1998a](https://rmgsc.cr.usgs.gov/outgoing/threshold_articles/Vogelsang1998b.pdf), [1998b](https://www.jstor.org/stable/2527353?seq=1#page_scan_tab_contents)) statistics. 
 
-However, note that the stationarity tests, as well as the Box-Cox transformation above is heavily influenced by the presense of breaks.
-For more theory, consult [Charfeddine and Gu\'egan](https://ac.els-cdn.com/S0378437112005407/1-s2.0-S0378437112005407-main.pdf?_tid=145a548e-bffb-11e7-bcb7-00000aacb360&acdnat=1509647256_f0029583e43c334803924ccb2077130c), [Glyn, Perera and Verma (2007)](https://www.upo.es/revistas/index.php/RevMetCuant/article/view/2065), [Carrion-i-Silvestre, Kim and Perron (2009)](https://www.jstor.org/stable/pdf/40388611.pdf), [Perron (2017)](http://www.mdpi.com/2225-1146/5/2/22/pdf) for futher information.
+Also, the stationarity tests, as well as the Box-Cox transformation above are heavily influenced by the presense of breaks.
+For more theory, consult [Charfeddine and Gu\'egan](https://ac.els-cdn.com/S0378437112005407/1-s2.0-S0378437112005407-main.pdf?_tid=145a548e-bffb-11e7-bcb7-00000aacb360&acdnat=1509647256_f0029583e43c334803924ccb2077130c), [Glyn, Perera and Verma (2007)](https://www.upo.es/revistas/index.php/RevMetCuant/article/view/2065), [Carrion-i-Silvestre, Kim and Perron (2009)](https://www.jstor.org/stable/pdf/40388611.pdf), [Perron (2017)](http://www.mdpi.com/2225-1146/5/2/22/pdf)..
+Following  [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract), the estimation window contains 4 breaks:
+
+```r
+breakpoints(my.ts ~ 1)
+#          Optimal 4-segment partition: 
+# Call:
+# breakpoints.formula(formula = my.ts ~ 1)
+# 
+# Breakpoints at observation number:
+# 74 118 164 
+# 
+# Corresponding to breakdates:
+# 2059(3) 2065(5) 2072(2) 
+```
+
 To keep this tutorial analysis simple, I consider only one break in mean as determined above on 2016-10-30, which I let it enter the ARMAX model as an external regressor and I do not proceed to a BoxCox transformation.
 
 
 ## 2.4. ARIMAX modelling
 
-ts.DT <- DT[, .(date, sales, webvisits)] 
-
-
-The best fitted simple ARIMA with seasonality is the ARIMA(1,1,1)(0,0,1)[7] with BIC 1945.06. Ideally, I would proceed to cross-validation/out-of-sample tests and extensive calibration, though. Ljung-Box shows that the residuals can be considered white noise. 
-The portmanteau test does not reveal serial correlation for the first 20 lags of the model and I go forward to forecasting.
-
+### ARIMA
 ```r
 estimation.window.DT <- my.ts.DT[date >= '2016-09-01']
 estimation.window.sales <- ts(estimation.window.DT[, sales], start = 0, frequency = 7)
-auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 2, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 2, trace = FALSE, stepwise = TRUE, max.order = 20, allowmean = TRUE, ic = 'bic')
+estimation.window.webvisits <- ts(estimation.window.DT[, webvisits], start = 0, frequency = 7)
+fit.1.sales <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 2, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 2, trace = FALSE, stepwise = TRUE, max.order = 20, allowmean = TRUE, ic = 'bic')
+fit.1.sales
+# Series: estimation.window.sales 
+# ARIMA(1,1,1)(0,0,1)[7] with drift 
+# 
+# Coefficients:
+#          ar1      ma1    sma1   drift
+#       0.4190  -0.9626  0.2254  1.2397
+# s.e.  0.0682   0.0275  0.0601  0.7180
+# 
+# sigma^2 estimated as 16406:  log likelihood=-1516.63
+# AIC=3043.26   AICc=3043.51   BIC=3060.7
+Box.test(fit.1$resid, lag=30, fitdf=3, type='Ljung')$p.value  # fitdf p+q + P + Q
+tsdisplay(fit.1$resid, lag.max = 30)
 ```
+The best fitted simple ARIMA with seasonality is the ARIMA(1,1,1)(0,0,1)[7] with BIC 3060.7. 
+Ideally, I would proceed to cross-validation/out-of-sample tests and extensive calibration, though. 
+Ljung-Box shows that the residuals can be considered white noise. 
+The portmanteau test does not reveal serial correlation for the first 20 lags of the model and I go forward to forecasting.
+fit.1.sales.extended <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 0, trace = TRUE, stepwise = FALSE, max.order = 10, allowmean = TRUE, ic = 'bic', num.cores = 3)
+
+### ARIMAX
+```r
+fit.2.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = estimation.window.webvisits)
+fit.2.xreg 
+Series: estimation.window.sales 
+Regression with ARIMA(1,0,1)(0,0,1)[7] errors 
+
+Coefficients:
+         ar1      ma1    sma1  intercept    xreg
+      0.5859  -0.2709  0.1242    78.0997  0.6206
+s.e.  0.1327   0.1554  0.0646    47.8684  0.0768
+
+sigma^2 estimated as 14575:  log likelihood=-1507.24
+AIC=3026.48   AICc=3026.83   BIC=3047.43
+
+
+Box.test(fit.2.xreg$resid, lag=30, fitdf=3, type='Ljung')$p.value  # fitdf p+q + P + Q
+[1] 0.8294632
+
+tsdisplay(fit.2.xreg$resid, lag.max = 30)
+
+Let's try to incorporate the marketing campains
+
+my.ts.DT[, campaign := 0]
+my.ts.DT[date >= '2016-09-15' & date <= '2016-09-23', campaign := 1]
+my.ts.DT[date >= '2016-11-25' & date <= '2016-11-29', campaign := 1]
+my.ts.DT[date >= '2017-01-25' & date <= '2017-02-03', campaign := 1]
+
+my.campaigns <-  as.matrix(my.ts.DT[date >= '2016-09-01', campaign], start = c(2014, 245), frequency = 7)
+
+fit.3 <- auto.arima((my.ts), max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 1, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = FALSE, xreg = my.campaigns)
+
+fit.4 <- auto.arima((my.ts), max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 1, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = FALSE, xreg = cbind(my.campaigns, my.webvisits))
+
+my.outliers <- tso(my.ts)
+
+my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2016, 245), frequency = 365)
+fit.6 <- auto.arima((my.ts), max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 1, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = FALSE, xreg = cbind(my.Expos, my.webvisits, my.outliers$effects), parallel = TRUE, num.cores = 3, ic='bic')
+```
+ fit.1.sales.extended <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 0, trace = TRUE, stepwise = FALSE, max.order = 10, allowmean = TRUE, ic = 'bic', parallel = TRUE, num.cores = 4)
+
+
+
+
+> fit.1.sales.extended
+Series: estimation.window.sales 
+ARIMA(2,1,1)(1,0,1)[7] 
+
+Coefficients:
+         ar1     ar2      ma1    sar1     sma1
+      0.3906  0.1651  -0.9757  0.9279  -0.7720
+s.e.  0.0670  0.0677   0.0182  0.0501   0.0936
+
+sigma^2 estimated as 15181:  log likelihood=-1507.51
+AIC=3027.03   AICc=3027.38   BIC=3047.96
+
 
 I only mention some highlights of further experimentation, to conserve space. 
 For the transformed series, the best fitted ARMA without seasonality is the ARMA(2,0,1). 
