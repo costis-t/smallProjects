@@ -210,18 +210,18 @@ campaign.dates <- data.frame(campaign.start =  c(as.Date('2016-01-23'),
 					                            as.Date('2017-02-03')))
 
 figure <- ggplot(DT) +
-	geom_line(aes(x = date, y = sales), colour = 'red', size = 0.1, alpha = 0.7) +
-	geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.3)$fit), colour = 'darkgreen',  size = 1) +
-	geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.05)$fit), colour = 'blue',  size = 0.4) +
-	geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.95)$fit), colour = 'darkred',  size = 2, alpha = 0.4) +
-	scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y', date_breaks = '1 year') +
-       geom_rect(data = campaign.dates, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
-       geom_point(aes(x = date, y = outliers.NAs)) +
-       labs(title = '3. The Sales Time-Series',
-           subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.\nIncludes three smoothing functions with different coarseness.',
-           y = 'Sales',
-           x = 'Date') + 
-    list()
+	  geom_line(aes(x = date, y = sales), colour = 'red', size = 0.1, alpha = 0.7) +
+	  geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.3)$fit), colour = 'darkgreen',  size = 1) +
+	  geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.05)$fit), colour = 'blue',  size = 0.4) +
+	  geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.95)$fit), colour = 'darkred',  size = 2, alpha = 0.4) +
+	  scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y', date_breaks = '1 year') +
+          geom_rect(data = campaign.dates, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
+          geom_point(aes(x = date, y = outliers.NAs)) +
+          labs(title = '3. The Sales Time-Series',
+              subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.\nIncludes three smoothing functions with different coarseness.',
+              y = 'Sales',
+              x = 'Date') + 
+        list()
 
 ggsave(filename = 'figures/03-sales-graph.png', plot = figure, height = 90, units = 'mm')
 ```
