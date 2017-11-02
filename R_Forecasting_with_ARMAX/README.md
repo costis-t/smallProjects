@@ -2,13 +2,15 @@
 In this sample, I analyze a sales time-series and I identify whether there is a permanent impact of marketing campaigns on a sales time-series.
 I also forecast the sales time-series for one month with and without an imminent marketing campaing using ARMAX modelling.
 [TOC levels=1-3]: # "#### Table of Contents"
+
 #### Table of Contents
-- [Heading **some bold** 1](#heading-some-bold-1)
-    - [Heading 1.1 _some italic_](#heading-11-some-italic)
+- [R and Data preparation ](#R-and-Data-preparation)
+    - [Required R packages](#Required-R-packages)
         - [Heading 1.1.1](#heading-111)
         - [Heading 1.1.2  **_some bold italic_**](#heading-112--some-bold-italic)
 - [Heading 2](#heading-2)
     - [Heading 2.0.1](#heading-201)
+
 # R and Data preparation 
 ## Required R packages
 For the analysis, start by installing the necessary packages.
@@ -100,12 +102,7 @@ In the rest of the document I skip such trivial details and I also take similar 
 ```r
 DT[, c('V1', 'date') := .(NULL, as.Date(date))]
 ```
-# Heading **some bold** 1
-## Heading 1.1 _some italic_
-### Heading 1.1.1
-### Heading 1.1.2  **_some bold italic_**
-# Heading 2
-### Heading 2.0.1
+
 Now we have the following `DT`
 ```r
 str(DT)
