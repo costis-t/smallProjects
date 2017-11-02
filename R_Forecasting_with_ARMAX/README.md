@@ -276,7 +276,7 @@ For experimentation, please refer to the `BoxCox.lambda()` and `BoxCox()` functi
 
 ### 2.3.2. Breaks
 Ideally, we do not want mean, variance, autocorrelation and relationship breaks for the time-series for sound inference. 
-[Hansen (2012)](https://www.ssc.wisc.edu/~bhansen/crete/crete5.pdf) says there is no good theory for forecasting for series with breaks. 
+[Hansen (2012)](https://www.ssc.wisc.edu/~bhansen/crete/crete5.pdf) says there is no good theory for forecasting for series with breaks and [Perron (2017)](http://www.mdpi.com/2225-1146/5/2/22/pdf) presents recent papers which deal with structural changes and stationarity. 
 According to [Pesaran and Timmermann (2007)](https://www.sciencedirect.com/science00/article/pii/S0304407606000418), in not an identical case, however, the optimal window for starts a bit before the last break. 
 Bai and Perron (2003) method indicates considering three breaks as optimal. 
 Even in non optimal cases with 2, 4 or 5 breaks the last break is on 2016-10-30. Hence, I consider 2016-09-01 as the start of my estimation window. 
@@ -376,23 +376,34 @@ ggsave(filename = 'figures/10-graph-estimation-window.png', plot = figure, heigh
 
 ### 2.3.3. Stationarity
 We must also perform stationarity tests (see `adf.test()`, `pp.test()`, `kpss.test()` of the `tseries` package in R).
-The series are non-stationary for the whole period, but they are stationary for the selected time-window.
-If our analysis entailed non-stationary time series Sales and Web Visits seem to be cointegrated by the Johansen test (see `ca.jo()` of the `urca` package in R), so stationarity is not an issue.
-The transformed series are stationary under the ADF/PP/KPSS tests. 
-The not-transformed series are obviously not stationary. 
-In rough terms, for the Web Visits, there seems to be a parallel movement in 2014-2015, a slightly upward trend during 2015-2016, an abrupt since late 2015/early 2016 which holds till today or has faded after late 2016. 
-ADF, DF-GLS do not indicate a stochastic trend. 
+The series are non-stationary for the whole period and the selected estimation window.
+```r
+adf.test(my.ts, alternative = 'stationary')
+#         Augmented Dickey-Fuller Test
+# data:  my.ts
+# Dickey-Fuller = -3.1108, Lag order = 6, p-value = 0.1085 # null of non-stationarity is not rejected at 0.05
+# alternative hypothesis: stationary
+
+pp.test(my.ts)
+#         Phillips-Perron Unit Root Test
+# data:  my.ts
+# Dickey-Fuller Z(alpha) = -131.51, Truncation lag parameter = 4, p-value = 0.01 # null of stationarity is rejected at 0.05
+# alternative hypothesis: stationary
+
+kpss.test(my.ts)
+#         KPSS Test for Level Stationarity
+# 
+# data:  my.ts
+# KPSS Level = 2.8092, Truncation lag parameter = 3, p-value = 0.01 # null of stationarity is rejected at 0.05
+```
+
+The stationarity tests do not indicate a stochastic.
 Nevertheless, there seems to be visually and with a test deterministic trend (`sales` increase by 0.372453 per day (`summary(lm(DT[, sales] ~ seq(1:length(DT[, sales]))))`)). 
 Note that proper trend analysis in serially correlated series like in our case demands the calculation of Vogelsang ([1998a](https://rmgsc.cr.usgs.gov/outgoing/threshold_articles/Vogelsang1998b.pdf), [1998b](https://www.jstor.org/stable/2527353?seq=1#page_scan_tab_contents)) statistics. 
-Moreover, the series are bounded (take values in [0, 1000]) so the unit root tests make sense.
 
-```r
-my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 7)
-my.webvisits <-  as.matrix(my.ts.DT[date >= '2016-09-01', webvisits], start = c(2014, 245), frequency = 7)
-
-my.matrix <- as.matrix(cbind(my.ts, my.webvisits))
-summary(ca.jo(my.matrix))
-```
+However, note that the stationarity tests, as well as the Box-Cox transformation above is heavily influenced by the presense of breaks.
+For more theory, consult [Charfeddine and Gu\'egan](https://ac.els-cdn.com/S0378437112005407/1-s2.0-S0378437112005407-main.pdf?_tid=145a548e-bffb-11e7-bcb7-00000aacb360&acdnat=1509647256_f0029583e43c334803924ccb2077130c), [Glyn, Perera and Verma (2007)](https://www.upo.es/revistas/index.php/RevMetCuant/article/view/2065), [Carrion-i-Silvestre, Kim and Perron (2009)](https://www.jstor.org/stable/pdf/40388611.pdf), [Perron (2017)](http://www.mdpi.com/2225-1146/5/2/22/pdf) for futher information.
+To keep this tutorial analysis simple, I consider only one break in mean as determined above on 2016-10-30, which I let it enter the ARMAX model as an external regressor and I do not proceed to a BoxCox transformation.
 
 
 ## 2.4. ARIMAX modelling
@@ -427,6 +438,48 @@ Note that ARIMA-based intervals are generally too narrow and that historical pat
 
 
 ## 5. Expansions
+Sales and Web Visits, although non-stationary, seem to be cointegrated by the Johansen test (see `ca.jo()` of the `urca` package in R). 
+Hence, with a clear cointegration relation we could also forecast using vector autoregression (VAR/VECM/etc.). 
+For futher analysis, consult [Harris and Sollis(2002)](http://eu.wiley.com/WileyCDA/WileyTitle/productCd-0470844434.html).
+```r
+my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 7)
+my.webvisits <-  as.matrix(my.ts.DT[date >= '2016-09-01', webvisits], start = c(2014, 245), frequency = 7)
+
+my.matrix <- as.matrix(cbind(my.ts, my.webvisits))
+summary(ca.jo(my.matrix))
+# The value of the test statistic is: 14.9613 61.3969 
+# 
+# ###################### 
+# # Johansen-Procedure # 
+# ###################### 
+# 
+# Test type: maximal eigenvalue statistic (lambda max) , with linear trend 
+# 
+# Eigenvalues (lambda):
+# [1] 0.22489667 0.06019242
+# 
+# Values of teststatistic and critical values of test:
+# 
+#           test 10pct  5pct  1pct
+# r <= 1 | 14.96  6.50  8.18 11.65 # test value greater than the critical
+# r = 0  | 61.40 12.91 14.90 19.19 # test value greater than the critical
+# 
+# Eigenvectors, normalised to first column:
+# (These are the cointegration relations)
+# 
+#                  my.ts.l2 my.webvisits.l2
+# my.ts.l2        1.0000000        1.00000
+# my.webvisits.l2 -0.6967978       32.90515
+# 
+# Weights W:
+# (This is the loading matrix)
+# 
+#                  my.ts.l2 my.webvisits.l2
+# my.ts.d       -0.62798816   -0.001265426
+# my.webvisits.d -0.02119726   -0.003196105
+```
+
+
 The above analysis is obviously preliminary, especially for time series that deal with thousands/millions of sales and there are a lot at stake.
 The general analytical path could be consisted of these steps:
  * visual inspection, standard statistical tests
