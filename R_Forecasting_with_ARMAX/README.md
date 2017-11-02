@@ -107,7 +107,7 @@ str(DT)
 I also create a simple time-series plot to see if everything looks fine.
 ```r
 png(file= 'figures/01-simple-sales-graph.pdf')
-ggplot(data = DT, aes(date, sales)) + geom_line()
+ggplot(data = DT, aes(date, sales)) + geom_line() + ggtitle('1. Sales simple graph') + ylab('Sales') + xlab('Date')
 dev.off()
 ```
 
@@ -161,7 +161,7 @@ Now, we are ready to start our analysis!
 # Analysis 
 ## Helicopter view of the data
 
-As in theory, there seems to be four components in the time series (trend, cycle, seasonal, random term). 
+As in theory, there seems to be four components in the time series (trend, cycle, seasonal, random error). 
 Data are very noisy. 
 Ideally, we'd like to have a large increase during and after the marketing campaings, but this does not happen.
 Since there is an intervention variable (Marketing Campains) an ARMAX model seems appropriate. 
@@ -215,12 +215,12 @@ figure <- ggplot(DT) +
 	geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.05)$fit), colour = 'blue',  size = 0.4) +
 	geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.95)$fit), colour = 'darkred',  size = 2, alpha = 0.4) +
 	scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y', date_breaks = '1 year') +
-    geom_rect(data = campaign.dates, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
-    geom_point(aes(x = date, y = outliers.NAs)) +
-    labs(title = '3. The Sales Time-Series',
-         subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.\nIncludes three smoothing functions with different coarseness.',
-         y = 'Sales',
-         x = 'Date') + 
+       geom_rect(data = campaign.dates, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
+       geom_point(aes(x = date, y = outliers.NAs)) +
+       labs(title = '3. The Sales Time-Series',
+           subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.\nIncludes three smoothing functions with different coarseness.',
+           y = 'Sales',
+           x = 'Date') + 
     list()
 
 ggsave(filename = 'figures/03-sales-graph.png', plot = figure, height = 90, units = 'mm')
