@@ -8,18 +8,19 @@ I also forecast the sales time-series for one month with and without an imminent
     - [1.1. Required R packages](#11-required-r-packages)
     - [1.2. Load and prepare the data series](1.2.-load-and-prepare-the-data-series)
     - [1.3. Data quality](#13-data-quality)
-    - [Analysis](#analysis)
-    - [Helicopter view of the data](#helicopter-view-of-the-data)
-    - [Graph with outliers and smoothing curves](#graph-with-outliers-and-smoothing-curves)
-    - [Statistical characteristics](#statistical-characteristics)
-    - [Autocorrelation structure](#autocorrelation-structure)
-    - [Breaks](#breaks)
-    - [Stationarity](#stationarity)
-    - [ARIMAX modelling](#arimax-modelling)
-    - [ppp](#ppp)
-    - [ppp](#ppp)
-    - [ppp](#ppp)
-    - [Expansions](#expansions)
+- [2. Analysis](#2-analysis)
+    - [2.1. Helicopter view of the data](#21-helicopter-view-of-the-data)
+    - [2.2. Graph with outliers and smoothing curves](#22-graph-with-outliers-and-smoothing-curves)
+    - [2.3. Statistical characteristics](#23-statistical-characteristics)
+    - [2.3.1. Autocorrelation structure](#231-autocorrelation-structure)
+    - [2.3.2. Breaks](#232-breaks)
+    - [2.3.3. Stationarity](#233-stationarity)
+    - [2.4. ARIMAX modelling](#24-arimax-modelling)
+- [3. Forecasting](#3-forecasting)
+    - [3.1. Forecasting without breaks](#31-forecasting-without-breaks)
+    - [3.2. Forecasting without breaks](#32-forecasting-without-breaks)
+- [4. Decision making](#4-decision-making)
+- [5. Expansions](#5-expansions)
 
 
 # 1. R and Data preparation 
@@ -177,8 +178,8 @@ dev.off()
 
 Now, we are ready to start our analysis!
 
-# Analysis 
-## Helicopter view of the data
+# 2. Analysis 
+## 2.1. Helicopter view of the data
 
 As in theory, there seems to be four components in the time series (trend, cycle, seasonal, random error). 
 Data are very noisy. 
@@ -196,7 +197,7 @@ We don’t see linear, but a polynomial, trend for the whole time-series, which 
 We also see structural breaks (at least in level and variance) which influences the unit root tests and need further exploration. 
 I follow [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract) and the BIC criterion suggests 3 breaks (four would not make a large difference, thouggh) and confirms my visual perception.
 
-## Graph with outliers and smoothing curves
+## 2.2. Graph with outliers and smoothing curves
 Let's create a beautiful graph for the data!
 
 First, we detect the outliers using the Hampel filter.
@@ -247,8 +248,8 @@ ggsave(filename = 'figures/03-sales-graph.png', plot = figure, height = 90, unit
 
 ![Sales graph](figures/03-sales-graph.png)
 
-## Statistical characteristics
-### Autocorrelation structure
+## 2.3. Statistical characteristics
+### 2.3.1. Autocorrelation structure
 
 I start with correlation analysis.
 
@@ -274,7 +275,7 @@ Hence, I could transform the enquiries with a power transformation, which s seem
 The optimal Box-Cox λ refers to a logarithmic transformation and transposes the increased variance position to the beginning of the series.
 For experimentation, please refer to the `BoxCox.lambda()` and `BoxCox()` functions of the `forecast` package in R.
 
-### Breaks
+### 2.3.2. Breaks
 Ideally, we do not want mean, variance, autocorrelation and relationship breaks for the time-series for sound inference. 
 [Hansen (2012)](https://www.ssc.wisc.edu/~bhansen/crete/crete5.pdf) says there is no good theory for forecasting for series with breaks. 
 According to [Pesaran and Timmermann (2007)](https://www.sciencedirect.com/science00/article/pii/S0304407606000418), in not an identical case, however, the optimal window for starts a bit before the last break. 
@@ -374,7 +375,7 @@ ggsave(filename = 'figures/10-estimation-window-graph.png', plot = figure, heigh
 
 ![Sales Estimation Window](figures/10-estimation-window-graph.png)
 
-### Stationarity
+### 2.3.3. Stationarity
 We must also perform stationarity tests (see `adf.test()`, `pp.test()`, `kpss.test()` of the `tseries` package in R). 
 Sales and Web Visits seem to be cointegrated by the Johansen test (see `ca.jo()` of the `urca` package in R), so stationarity is not an issue.
 The transformed series are stationary under the ADF/PP/KPSS tests. 
@@ -394,7 +395,7 @@ summary(ca.jo(my.matrix))
 ```
 
 
-## ARIMAX modelling
+## 2.4. ARIMAX modelling
 
 ts.DT <- DT[, .(date, sales, webvisits)] 
 
@@ -421,9 +422,11 @@ Note that ARIMA-based intervals are generally too narrow and that historical pat
 
 
 
+## 3. Forecasting
+## 4. Decision making
 
 
-# Expansions
+## 5. Expansions
 The above analysis is obviously preliminary, especially for time series that deal with thousands/millions of sales and there are a lot at stake.
 The general analytical path could be consisted of these steps:
  * visual inspection, standard statistical tests
