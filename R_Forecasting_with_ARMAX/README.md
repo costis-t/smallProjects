@@ -4,12 +4,12 @@ I also forecast the sales time-series for one month with and without an imminent
 [TOC levels=1-3]: # "#### Table of Contents"
 
 #### Table of Contents
-- [R and Data preparation ](#r-and-data-preparation)
-    - [Required R packages](#required-r-packages)
+- [1. R and Data preparation ](#1-r-and-data-preparation)
+    - [1.1. Required R packages](#11-required-r-packages)
 
 
-# R and Data preparation 
-## Required R packages
+# 1. R and Data preparation 
+## 1.1. Required R packages
 For the analysis, start by installing the necessary packages.
 This step can be skipped if we have already installed the necessary packages.
 
@@ -58,7 +58,7 @@ sapply(c('astsa', 'forecastxgb', 'TStools', 'smooth', 'GDMH', 'caret', 'nnet', '
      ), require, character.only = TRUE) # load packages
 ```
 
-## Loading and preparing the data series
+## 1.2. Load and prepare the data series
 I have saved the data series as `data/anonymized-forecasting-data.csv`.
 We can confirm this within R (under a Linux OS):
 
