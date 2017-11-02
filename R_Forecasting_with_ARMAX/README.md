@@ -345,38 +345,39 @@ my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequen
 plot.ts(my.ts)
 
 campaign.dates.truncated <- data.frame(
-                   campaign.start =  c(
-                           #                 as.Date('2016-01-23'),
-                           as.Date('2016-09-15'),
-                           as.Date('2016-11-25'),
-                           as.Date('2017-01-25')
-                           ), campaign.end = c(
-                           #                 as.Date('2016-02-01'),
-                           as.Date('2016-09-23'),
-                           as.Date('2016-11-29'),
-                           as.Date('2017-02-03')))
+				   campaign.start =  c(
+						   #                 as.Date('2016-01-23'),
+						   as.Date('2016-09-15'),
+						   as.Date('2016-11-25'),
+						   as.Date('2017-01-25')
+						   ), campaign.end = c(
+						   #                 as.Date('2016-02-01'),
+						   as.Date('2016-09-23'),
+						   as.Date('2016-11-29'),
+						   as.Date('2017-02-03')))
 
 
 figure <-   ggplot(DT[date >= '2016-09-01']) +
-    geom_line(aes(x = date, y = sales), colour = 'red', size = 0.4, alpha = 0.7)  +
-    geom_rect(data = campaign.dates.truncated, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
+	geom_line(aes(x = date, y = sales), colour = 'red', size = 0.4, alpha = 0.7)  +
+	geom_rect(data = campaign.dates.truncated, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
 
-    #              scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y',
-    scale_x_date( date_minor_breaks = '1 week',  date_labels = '%m - %Y', # http://strftime.org/
-             date_breaks = '1 month'                        ) +
-             geom_point(aes(x = date, y = outliers.NAs)) +
+	#              scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y',
+	scale_x_date( date_minor_breaks = '1 week',  date_labels = '%m - %Y', # http://strftime.org/
+		     date_breaks = '1 month'                        ) +
+#             geom_point(aes(x = date, y = outliers.NAs)) +
 ggtitle('Sales, estimation window') +
 ylab('Sales') + xlab('Date')+
 list()
 
-ggsave(filename = 'figures/10-graph-estimation-window-graph.png', plot = figure, height = 100, units = 'mm')
+ggsave(filename = 'figures/10-graph-estimation-window.png', plot = figure, height = 100, units = 'mm')
 ```
 
-![Sales Estimation Window](figures/10-estimation-window-graph.png)
+![Sales Estimation Window](figures/10-graph-estimation-window.png)
 
 ### 2.3.3. Stationarity
-We must also perform stationarity tests (see `adf.test()`, `pp.test()`, `kpss.test()` of the `tseries` package in R). 
-Sales and Web Visits seem to be cointegrated by the Johansen test (see `ca.jo()` of the `urca` package in R), so stationarity is not an issue.
+We must also perform stationarity tests (see `adf.test()`, `pp.test()`, `kpss.test()` of the `tseries` package in R).
+The series are non-stationary for the whole period, but they are stationary for the selected time-window.
+If our analysis entailed non-stationary time series Sales and Web Visits seem to be cointegrated by the Johansen test (see `ca.jo()` of the `urca` package in R), so stationarity is not an issue.
 The transformed series are stationary under the ADF/PP/KPSS tests. 
 The not-transformed series are obviously not stationary. 
 In rough terms, for the Web Visits, there seems to be a parallel movement in 2014-2015, a slightly upward trend during 2015-2016, an abrupt since late 2015/early 2016 which holds till today or has faded after late 2016. 
