@@ -7,19 +7,19 @@ I also forecast the sales time-series for one month with and without an imminent
 - [1. R and Data preparation ](#1-r-and-data-preparation)
     - [1.1. Required R packages](#11-required-r-packages)
     - [1.2. Load and prepare the data series](1.2.-load-and-prepare-the-data-series)
-    - [Data quality](data-quality)
-    - [Analysis](analysis)
-    - [Helicopter view of the data](helicopter-view-of-the-data)
-    - [Graph with outliers and smoothing curves](graph-with-outliers-and-smoothing-curves)
-    - [Statistical characteristics](statistical-characteristics)
-    - [Autocorrelation structure](autocorrelation-structure)
-    - [Breaks](breaks)
-    - [Stationarity](stationarity)
-    - [ARIMAX modelling](arimax-modelling)
-    - [ppp](ppp)
-    - [ppp](ppp)
-    - [ppp](ppp)
-    - [Expansions](expansions)
+    - [1.3. Data quality](#13-data-quality)
+    - [Analysis](#analysis)
+    - [Helicopter view of the data](#helicopter-view-of-the-data)
+    - [Graph with outliers and smoothing curves](#graph-with-outliers-and-smoothing-curves)
+    - [Statistical characteristics](#statistical-characteristics)
+    - [Autocorrelation structure](#autocorrelation-structure)
+    - [Breaks](#breaks)
+    - [Stationarity](#stationarity)
+    - [ARIMAX modelling](#arimax-modelling)
+    - [ppp](#ppp)
+    - [ppp](#ppp)
+    - [ppp](#ppp)
+    - [Expansions](#expansions)
 
 
 # 1. R and Data preparation 
@@ -132,7 +132,7 @@ dev.off()
 
 ![Simple sales graph](figures/01-simple-sales-graph.pdf)
 
-## Data quality
+## 1.3. Data quality
 Let's see if we have any missing values; days with no data.
 Create a sequence of dates from the first till the last day of `DT`.
 ```r
