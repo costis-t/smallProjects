@@ -12,45 +12,45 @@ imputeTS
 
 ```r
 sapply(c('astsa', 'forecastxgb', 'TStools', 'smooth', 'GDMH', 'caret', 'nnet', 'tsoutliers', 'colorout', 'data.table', 'randomNames', 'xtable', 'lubridate', 'compare', 'ggplot2', 'zoo',
-	 'scales', 'stringr', 'foreach',  'gridExtra',
-	 'colorout', 
-	 'tseries', 'urca',
-	 # 'CADFtest',
-	 'fUnitRoots', 
-	 'sos', 
-	 'stats', 
-	 'lmtest', 
-	 #'rasterVis' 
-	 # 'bigalgebra', 'bigmemory', 'biglm',
-	 'pracma', 
-	 'Matrix',# for sparse
-	 'slam', 'prophet', 'RcppArmadillo', 'Rcpp', 'padr',
-	 'parallel', 'foreach', 'doParallel', 'shiny', #'lineprof',
-	 'rbenchmark', 'profvis', 'formula.tools', 'sandwich',
-	 'lattice', 'xts', 'imputeTS', 'strucchange', 'car', 'forecast', 'R.utils', 'GGally', 'zoom', 'TSA', 'foreign'
-	 ), install.packages) # install packages
+     'scales', 'stringr', 'foreach',  'gridExtra',
+     'colorout', 
+     'tseries', 'urca',
+     # 'CADFtest',
+     'fUnitRoots', 
+     'sos', 
+     'stats', 
+     'lmtest', 
+     #'rasterVis' 
+     # 'bigalgebra', 'bigmemory', 'biglm',
+     'pracma', 
+     'Matrix',# for sparse
+     'slam', 'prophet', 'RcppArmadillo', 'Rcpp', 'padr',
+     'parallel', 'foreach', 'doParallel', 'shiny', #'lineprof',
+     'rbenchmark', 'profvis', 'formula.tools', 'sandwich',
+     'lattice', 'xts', 'imputeTS', 'strucchange', 'car', 'forecast', 'R.utils', 'GGally', 'zoom', 'TSA', 'foreign'
+     ), install.packages) # install packages
 ```
 
 Next, load them with:
 ```r
 sapply(c('astsa', 'forecastxgb', 'TStools', 'smooth', 'GDMH', 'caret', 'nnet', 'tsoutliers', 'colorout', 'data.table', 'randomNames', 'xtable', 'lubridate', 'compare', 'ggplot2', 'zoo',
-	 'scales', 'stringr', 'foreach',  'gridExtra',
-	 'colorout', 
-	 'tseries', 'urca',
-	 # 'CADFtest',
-	 'fUnitRoots', 
-	 'sos', 
-	 'stats', 
-	 'lmtest', 
-	 #'rasterVis' 
-	 # 'bigalgebra', 'bigmemory', 'biglm',
-	 'pracma', 
-	 'Matrix',# for sparse
-	 'slam', 'prophet', 'RcppArmadillo', 'Rcpp', 'padr',
-	 'parallel', 'foreach', 'doParallel', 'shiny', #'lineprof',
-	 'rbenchmark', 'profvis', 'formula.tools', 'sandwich',
-	 'lattice', 'xts', 'imputeTS', 'strucchange', 'car', 'forecast', 'R.utils', 'GGally', 'zoom', 'TSA', 'foreign'
-	 ), require, character.only = TRUE) # load packages
+     'scales', 'stringr', 'foreach',  'gridExtra',
+     'colorout', 
+     'tseries', 'urca',
+     # 'CADFtest',
+     'fUnitRoots', 
+     'sos', 
+     'stats', 
+     'lmtest', 
+     #'rasterVis' 
+     # 'bigalgebra', 'bigmemory', 'biglm',
+     'pracma', 
+     'Matrix',# for sparse
+     'slam', 'prophet', 'RcppArmadillo', 'Rcpp', 'padr',
+     'parallel', 'foreach', 'doParallel', 'shiny', #'lineprof',
+     'rbenchmark', 'profvis', 'formula.tools', 'sandwich',
+     'lattice', 'xts', 'imputeTS', 'strucchange', 'car', 'forecast', 'R.utils', 'GGally', 'zoom', 'TSA', 'foreign'
+     ), require, character.only = TRUE) # load packages
 ```
 
 ## Loading and preparing the data series
@@ -202,19 +202,19 @@ The following figure, also includes three smoothing functions with different coa
 campaign.dates <- data.frame(campaign.start =  c(as.Date('2016-01-23'),
                                                 as.Date('2016-09-15'),
                                                 as.Date('2016-11-25'),
-					                            as.Date('2017-01-25')
-					                            ), campaign.end = c(
-					                            as.Date('2016-02-01'),
-					                            as.Date('2016-09-23'),
-					                            as.Date('2016-11-29'),
-					                            as.Date('2017-02-03')))
+                                                as.Date('2017-01-25')
+                                                ), campaign.end = c(
+                                                as.Date('2016-02-01'),
+                                                as.Date('2016-09-23'),
+                                                as.Date('2016-11-29'),
+                                                as.Date('2017-02-03')))
 
 figure <- ggplot(DT) +
-	  geom_line(aes(x = date, y = sales), colour = 'red', size = 0.1, alpha = 0.7) +
-	  geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.3)$fit), colour = 'darkgreen',  size = 1) +
-	  geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.05)$fit), colour = 'blue',  size = 0.4) +
-	  geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.95)$fit), colour = 'darkred',  size = 2, alpha = 0.4) +
-	  scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y', date_breaks = '1 year') +
+      geom_line(aes(x = date, y = sales), colour = 'red', size = 0.1, alpha = 0.7) +
+      geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.3)$fit), colour = 'darkgreen',  size = 1) +
+      geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.05)$fit), colour = 'blue',  size = 0.4) +
+      geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.95)$fit), colour = 'darkred',  size = 2, alpha = 0.4) +
+      scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y', date_breaks = '1 year') +
           geom_rect(data = campaign.dates, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
           geom_point(aes(x = date, y = outliers.NAs)) +
           labs(title = '3. The Sales Time-Series',
@@ -327,25 +327,25 @@ my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequen
 plot.ts(my.ts)
 
 campaign.dates.truncated <- data.frame(
-				   campaign.start =  c(
-						   #                 as.Date('2016-01-23'),
-						   as.Date('2016-09-15'),
-						   as.Date('2016-11-25'),
-						   as.Date('2017-01-25')
-						   ), campaign.end = c(
-						   #                 as.Date('2016-02-01'),
-						   as.Date('2016-09-23'),
-						   as.Date('2016-11-29'),
-						   as.Date('2017-02-03')))
+                   campaign.start =  c(
+                           #                 as.Date('2016-01-23'),
+                           as.Date('2016-09-15'),
+                           as.Date('2016-11-25'),
+                           as.Date('2017-01-25')
+                           ), campaign.end = c(
+                           #                 as.Date('2016-02-01'),
+                           as.Date('2016-09-23'),
+                           as.Date('2016-11-29'),
+                           as.Date('2017-02-03')))
 
 
 figure <-   ggplot(DT[date >= '2016-09-01']) +
-	geom_line(aes(x = date, y = sales), colour = 'red', size = 0.4, alpha = 0.7)  +
-	geom_rect(data = campaign.dates.truncated, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
+    geom_line(aes(x = date, y = sales), colour = 'red', size = 0.4, alpha = 0.7)  +
+    geom_rect(data = campaign.dates.truncated, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
 
-	#              scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y',
-	scale_x_date( date_minor_breaks = '1 week',  date_labels = '%m - %Y', # http://strftime.org/
-		     date_breaks = '1 month'                        ) +
+    #              scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y',
+    scale_x_date( date_minor_breaks = '1 week',  date_labels = '%m - %Y', # http://strftime.org/
+             date_breaks = '1 month'                        ) +
 #             geom_point(aes(x = date, y = outliers.NAs)) +
 ggtitle('Sales, estimation window') +
 ylab('Sales') + xlab('Date')+
