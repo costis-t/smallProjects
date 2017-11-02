@@ -1,7 +1,6 @@
 # Overview - under editing
 In this sample, I analyze a sales time-series and I identify whether there is a permanent impact of marketing campaigns on a sales time-series.
 I also forecast the sales time-series for one month with and without an imminent marketing campaing using ARMAX modelling.
-[TOC levels=1-3]: # "#### Table of Contents"
 
 #### Table of Contents
 - [1. R and Data preparation ](#1-r-and-data-preparation)
@@ -15,7 +14,7 @@ I also forecast the sales time-series for one month with and without an imminent
        - [2.3.1. Autocorrelation structure](#231-autocorrelation-structure)
        - [2.3.2. Breaks](#232-breaks)
        - [2.3.3. Stationarity](#233-stationarity)
-       - [2.4. ARIMAX modelling](#24-arimax-modelling)
+    - [2.4. ARIMAX modelling](#24-arimax-modelling)
 - [3. Forecasting](#3-forecasting)
     - [3.1. Forecasting without breaks](#31-forecasting-without-breaks)
     - [3.2. Forecasting without breaks](#32-forecasting-without-breaks)
@@ -370,7 +369,7 @@ ggtitle('Sales, estimation window') +
 ylab('Sales') + xlab('Date')+
 list()
 
-ggsave(filename = 'figures/10-estimation-window-graph.png', plot = figure, height = 100, units = 'mm')
+ggsave(filename = 'figures/10-graph-estimation-window-graph.png', plot = figure, height = 100, units = 'mm')
 ```
 
 ![Sales Estimation Window](figures/10-estimation-window-graph.png)
