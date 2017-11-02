@@ -1,9 +1,10 @@
-# Overview
+# Overview - under editing
 In this sample, I analyze a sales time-series and I identify whether there is a permanent impact of marketing campaigns on a sales time-series.
 I also forecast the sales time-series for one month with and without an imminent marketing campaing using ARMAX modelling.
+# Table of Contents
+1. [preparation](#preparation)
 
-
-# R and Data preparation
+# R and Data preparation {#preparation}
 ## Required R packages
 For the analysis, start by installing the necessary packages.
 This step can be skipped if we have already installed the necessary packages.
@@ -210,19 +211,19 @@ campaign.dates <- data.frame(campaign.start =  c(as.Date('2016-01-23'),
                                                 as.Date('2017-02-03')))
 
 figure <- ggplot(DT) +
-      geom_line(aes(x = date, y = sales), colour = 'red', size = 0.1, alpha = 0.7) +
-      geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.3)$fit), colour = 'darkgreen',  size = 1) +
-      geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.05)$fit), colour = 'blue',  size = 0.4) +
-      geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.95)$fit), colour = 'darkred',  size = 2, alpha = 0.4) +
-      scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y', date_breaks = '1 year') +
+          geom_line(aes(x = date, y = sales), colour = 'red', size = 0.1, alpha = 0.7) +
+          geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.3)$fit), colour = 'darkgreen',  size = 1) +
+          geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.05)$fit), colour = 'blue',  size = 0.4) +
+          geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.95)$fit), colour = 'darkred',  size = 2, alpha = 0.4) +
+          scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y', date_breaks = '1 year') +
           geom_rect(data = campaign.dates, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
           geom_point(aes(x = date, y = outliers.NAs)) +
           labs(title = '3. The Sales Time-Series',
-              subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.\nIncludes three smoothing functions with different coarseness.',
-              y = 'Sales',
-              x = 'Date') + 
-          list()
-
+               subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.\nIncludes three smoothing functions with different coarseness.',
+               y = 'Sales',
+               x = 'Date') + 
+          list() # I use + list() in the end as a little trick to add more options at will by commenting/uncommenting the corresponding lines
+      
 ggsave(filename = 'figures/03-sales-graph.png', plot = figure, height = 90, units = 'mm')
 ```
 
@@ -235,24 +236,23 @@ I start with correlation analysis.
 
 ```r
 png(file= 'figures/04-ACF-and-PACF-of-sales.png')
-tsdisplay(DT[, sales])
+tsdisplay(DT[, sales], main = "4. DT[, sales]")
 dev.off()
 ```
 ![ACF and PACF graph](figures/04-ACF-and-PACF-of-sales.png)
 
-The above figure shows that the ACF slope declines smoothly with shallow peaks every 7 periods (days). 
+Figure 4 shows that the ACF slope declines smoothly with shallow peaks every 7 periods (days). 
 The peaks after the 7th day can be considered weak statistically, since they can be related to the aforementioned weekly seasonality. 
 The smooth decline is indicative for the existence of a trend. 
 Hence, the ACF implies trend and seasonality. 
 The graph of the PACF confirms, since the statistical
 significance of the peaks after the 7th period seems week.
 For further analysis, we could also examine lagged cross-correlation between `sales` and `webvisits` (prewhitening the series and using the `ccf()` function in R). 
-This would indicate whether people examine thoroughly the product before their order.
+Cross-correlation would indicate whether people examine thoroughly the product before their order.
 
 Moreover, the sales time-series graph of the previous section shows a gradual increase in variance over time while the level of enquiries also increases. 
 This could be an indication of ARCH errors/innovations if it didn’t seem so gradual but clustered. 
-Hence, I could transform the enquiries with a power transformation. 
-This seems to be the best simple transformation. 
+Hence, I could transform the enquiries with a power transformation, which s seems to be the best simple transformation. 
 The optimal Box-Cox λ refers to a logarithmic transformation and transposes the increased variance position to the beginning of the series.
 For experimentation, please refer to the `BoxCox.lambda()` and `BoxCox()` functions of the `forecast` package in R.
 
@@ -304,11 +304,11 @@ summary(bp.ri)
 
 plot(bp.ri) # for three breaks
 plot(my.ts, type = 'l')
-lines(fitted(bp.ri, breaks = 3), col = 4) # !? 
+lines(fitted(bp.ri, breaks = 3), col = 4)
 lines(confint(bp.ri, breaks = 3))
 ```
 
-Hence, we choose the 1034th day of our time-series which corresponds to 30th of October of 2016:
+Hence, for the day of the break, we choose the 1034th day of our time-series which corresponds to 30th of October of 2016:
 ```r
 my.ts.DT[1034]
 #          date sales webvisits
@@ -346,7 +346,7 @@ figure <-   ggplot(DT[date >= '2016-09-01']) +
     #              scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y',
     scale_x_date( date_minor_breaks = '1 week',  date_labels = '%m - %Y', # http://strftime.org/
              date_breaks = '1 month'                        ) +
-#             geom_point(aes(x = date, y = outliers.NAs)) +
+             geom_point(aes(x = date, y = outliers.NAs)) +
 ggtitle('Sales, estimation window') +
 ylab('Sales') + xlab('Date')+
 list()
@@ -366,6 +366,15 @@ ADF, DF-GLS do not indicate a stochastic trend.
 Nevertheless, there seems to be visually and with a test deterministic trend (`sales` increase by 0.372453 per day (`summary(lm(DT[, sales] ~ seq(1:length(DT[, sales]))))`)). 
 Note that proper trend analysis in serially correlated series like in our case demands the calculation of Vogelsang ([1998a](https://rmgsc.cr.usgs.gov/outgoing/threshold_articles/Vogelsang1998b.pdf), [1998b](https://www.jstor.org/stable/2527353?seq=1#page_scan_tab_contents)) statistics. 
 Moreover, the series are bounded (take values in [0, 1000]) so the unit root tests make sense.
+
+```r
+my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 7)
+my.webvisits <-  as.matrix(my.ts.DT[date >= '2016-09-01', webvisits], start = c(2014, 245), frequency = 7)
+
+my.matrix <- as.matrix(cbind(my.ts, my.webvisits))
+summary(ca.jo(my.matrix))
+```
+
 
 ## ARIMA modelling
 
