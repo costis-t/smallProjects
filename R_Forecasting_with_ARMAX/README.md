@@ -221,7 +221,7 @@ figure <- ggplot(DT) +
               subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.\nIncludes three smoothing functions with different coarseness.',
               y = 'Sales',
               x = 'Date') + 
-        list()
+          list()
 
 ggsave(filename = 'figures/03-sales-graph.png', plot = figure, height = 90, units = 'mm')
 ```
