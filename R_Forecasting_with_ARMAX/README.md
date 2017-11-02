@@ -4,7 +4,7 @@ I also forecast the sales time-series for one month with and without an imminent
 # Table of Contents
 1. [preparation](#preparation)
 
-# R and Data preparation {#preparation}
+# R and Data preparation 
 ## Required R packages
 For the analysis, start by installing the necessary packages.
 This step can be skipped if we have already installed the necessary packages.
@@ -114,7 +114,7 @@ dev.off()
 
 ![Simple sales graph](figures/01-simple-sales-graph.pdf)
 
-## Data quality
+## Data quality {#preparation}
 Let's see if we have any missing values; days with no data.
 Create a sequence of dates from the first till the last day of `DT`.
 ```r
