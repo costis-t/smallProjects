@@ -70,7 +70,7 @@ DT <- fread('data/anonymized-forecasting-data.csv')
 It's a good idea to check the structure and summary of the object.
 ```r
 str(DT)
-Classes ‘data.table’ and 'data.frame':  1200 obs. of  4 variables:
+# Classes ‘data.table’ and 'data.frame':  1200 obs. of  4 variables:
 #  $ V1       : chr  "1" "2" "3" "4" ...
 #  $ date     : chr  "2014-01-01" "2014-01-02" "2014-01-03" "2014-01-04" ...
 #  $ webvisits: int  27 25 27 50 44 37 34 39 33 27 ...
@@ -78,13 +78,13 @@ Classes ‘data.table’ and 'data.frame':  1200 obs. of  4 variables:
 #  - attr(*, ".internal.selfref")=<externalptr> 
 
 summary(DT)
-#      date              webvisits           sales       
-# Min.   :2014-01-01   Min.   :   0.00   Min.   :   0.0  
-# 1st Qu.:2014-11-09   1st Qu.:  70.75   1st Qu.:  57.0  
-# Median :2015-09-08   Median : 129.00   Median : 123.0  
-# Mean   :2015-09-05   Mean   : 229.59   Mean   : 178.9  
-# 3rd Qu.:2016-07-05   3rd Qu.: 338.25   3rd Qu.: 242.5  
-# Max.   :2017-05-01   Max.   :1003.00   Max.   :1010.0  
+#       V1                date             webvisits           sales       
+#  Length:1200        Length:1200        Min.   :   0.00   Min.   :   0.0  
+#  Class :character   Class :character   1st Qu.:  70.75   1st Qu.:  57.0  
+#  Mode  :character   Mode  :character   Median : 129.00   Median : 123.0  
+#                                        Mean   : 229.59   Mean   : 178.9  
+#                                        3rd Qu.: 338.25   3rd Qu.: 242.5  
+#                                        Max.   :1003.00   Max.   :1010.0 
 ```
 
 Our data sources can have different layouts and some necessary adjustments may be required.
@@ -120,11 +120,11 @@ Create a sequence of dates from the first till the last day of `DT`.
 date.grid <- seq(as.Date(min(DT[, date])), as.Date(max(DT[, date])), by = 'day')
 length(date.grid)
 # [1] 1217
-row(DT)
+nrow(DT)
 # [1] 1200
 ```
 
-It seems we do have missing values.
+It seems we do have 17 missing values.
 Which are they? 
 R comes with set operation functions (?setdiff) and we can use a set difference to find them.
 ```r
@@ -134,9 +134,10 @@ setdiff(as.character(date.grid), as.character(DT$date))
 # [11] "2014-10-18" "2014-10-19" "2014-10-24" "2014-12-06" "2014-12-21"
 # [16] "2014-12-24" "2015-09-19"
 ```
-All in all, we have 17 missing values, located in the first half of the the time series. 
-We observe see noisy seasonality and complex series so we use Kalman filter to impute the missing values (in simpler cases linear interpolation could also be fine).
-Note, that we proceed to interpolation because it does not change the outcome of the analysis! 
+All in all, the 17 missing values are located in the first half of the the time series. 
+From the graph above, we observe noisy seasonality and complex series.
+Hence, we use a Kalman filter to impute the missing values (in simpler cases linear interpolation could also be fine).
+Note, that we proceed to such an interpolation because it does not change the outcome of the analysis! 
 
 ```r
 date.grid.DT <- data.table(date = c(date.grid))
@@ -160,7 +161,7 @@ Now, we are ready to start our analysis!
 # Analysis 
 ## Helicopter view of the data
 
-As in theory, there seems to be four components in the time series (trend, cycle, seasonal, random). 
+As in theory, there seems to be four components in the time series (trend, cycle, seasonal, random term). 
 Data are very noisy. 
 Ideally, we'd like to have a large increase during and after the marketing campaings, but this does not happen.
 Since there is an intervention variable (Marketing Campains) an ARMAX model seems appropriate. 
@@ -178,8 +179,19 @@ I follow [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.
 
 ## Graph with outliers and smoothing curves
 Let's create a beautiful graph for the data!
-The following figure shows different outliers using the Hampel filter.
-If we are further interested in the outliers, we should proceed to parameter calibration for the Hampel filter, but for this analysis it is not necessary.
+
+First, we detect the outliers using the Hampel filter.
+```r
+outliers.sales <- DT[, sales]
+plot(outliers.sales, type = 'l')
+omad <- hampel(outliers.sales, k = 20, t0 = 3)
+plot(outliers.sales, type='l')
+points(omad$ind, outliers.sales[omad$ind], pch=21, col='red')
+outliers.NAs <- rep(NA, length(DT[, sales])) 
+outliers.NAs[omad$ind] <- DT[, sales][omad$ind]
+```
+
+If we are further interested in the outliers, we should proceed to parameter calibration for the Hampel filter, but for this "tutorial analysis" it is not necessary.
 Ideally, we forecast with and without the outliers, calibrate their corrections and identify whether they are indeed outliers or indicate a response to an event (which seems plausible for the 3 outliers during the marketing campaigns). 
 Please refer to [Tsay (1988)](http://onlinelibrary.wiley.com/doi/10.1002/for.3980070102/abstract) and [Watson (2001)](http://eprints.whiterose.ac.uk/2209/1/ITS261_WP362_uploadable.pdf) for various outlier types (additive/level shifts/etc.) and techniques for their correction as a starting point. 
 At a more advanced stage, we could use a non-linear moving window and parameter calibration.
@@ -205,7 +217,7 @@ figure <- ggplot(DT) +
 	scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y', date_breaks = '1 year') +
     geom_rect(data = campaign.dates, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
     geom_point(aes(x = date, y = outliers.NAs)) +
-    labs(title = 'The Sales Time-Series',
+    labs(title = '3. The Sales Time-Series',
          subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.\nIncludes three smoothing functions with different coarseness.',
          y = 'Sales',
          x = 'Date') + 
