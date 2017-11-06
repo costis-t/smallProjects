@@ -480,8 +480,8 @@ For real-life work this option should be set as `FALSE`, but for the purposes of
 ### ARIMA
 ```r
 estimation.window.DT <- my.ts.DT[date >= '2016-09-01']
-estimation.window.sales <- ts(estimation.window.DT[, sales], start = 0, frequency = 7)
-estimation.window.webvisits <- ts(estimation.window.DT[, webvisits], start = 0, frequency = 7)
+estimation.window.sales <- ts(estimation.window.DT[, sales], start = c(2016, as.integer(strftime('2016-09-01', format = '%j'))), frequency = 365)
+estimation.window.webvisits <- ts(estimation.window.DT[, webvisits], start = c(2016, as.integer(strftime('2016-09-01', format = '%j'))), frequency = 365)
 fit.1.sales <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 2, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 2, trace = FALSE, stepwise = TRUE, max.order = 20, allowmean = TRUE, ic = 'bic')
 fit.1.sales
 # Series: estimation.window.sales 
@@ -519,7 +519,8 @@ my.ts.DT[date >= '2016-09-15' & date <= '2016-09-23', campaign := 1]
 my.ts.DT[date >= '2016-11-25' & date <= '2016-11-29', campaign := 1]
 my.ts.DT[date >= '2017-01-25' & date <= '2017-02-03', campaign := 1]
 
-my.campaigns <-  as.matrix(my.ts.DT[date >= '2016-09-01', campaign], start = c(2014, 245), frequency = 7)
+my.campaigns <-  as.matrix(my.ts.DT[date >= '2016-09-01', campaign], start = c(2014, 245), frequency = 365)
+my.campaigns <-  as.matrix(my.ts.DT[date >= '2016-09-01', campaign])
 ```
 The following, also suggests we have 4 outliers in our estimation window:
 1. An additive outliwer on the 22nd day.
@@ -554,6 +555,8 @@ my.estimation.window.outliers
 # 3   LS 117 2016:361   218.4 10.595
 # 4   TC 152  2017:31   487.0  4.859
 
+estimation.window.outlier.effects <- ts(my.estimation.window.outliers$effects, start = c(2016, as.integer(strftime('2016-09-01', format = '%j'))), frequency = 365)
+
 png(file = 'figures/15-estimation-window-outliers.png')
 ts.plot(my.estimation.window.outliers$effects, main = '5. Estimation window outliers')
 dev.off()
@@ -562,11 +565,15 @@ dev.off()
 
 To find the ideal model for this tutorial, I consider the models of the following table
 
-| Model | External regresor | BIC |
+| Object | Model | specification| External regresor(s) | BIC |
 | ----- | ----------------- | --- |
-| ARIMA((1,1,1)(0,0,1)[7]) with drift | none | 3060.7 |
-| ARIMA(1,0,1)(0,0,1)[7] | `webvisits` | 3047.43 |
-
+| `fit.1.sales` | ARIMA((1,1,1)(0,0,1)[7]) with drift | none | 3060.7 |
+| `fit.2.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Visits | 3047.43 |
+| `fit.3.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Campaigns | 3052.71 |
+| `fit.4.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Visits and Campaigns | 3042.51 |
+| `fit.5.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Outlier Effects | 3003.57 |
+| `fit.6.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Visits  and Outlier Effects | 3002.02 |
+| `fit.7.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Visits, Campaigns and Outlier Effects | 2993.62 |
 
 For the purposes of accurate work, such analyses are advised to be automated through a [make-type-of-file](https://robjhyndman.com/hyndsight/makefiles/) or a master script and as mentioned above, `stepwise` should be set to `FALSE`.
 Also, note that ARIMA-based intervals are generally too narrow and that historical patterns will repeat for the forecasting period.
@@ -575,52 +582,139 @@ Also, note that ARIMA-based intervals are generally too narrow and that historic
 ```r
 fit.2.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = estimation.window.webvisits)
 fit.2.xreg 
-Series: estimation.window.sales 
-Regression with ARIMA(1,0,1)(0,0,1)[7] errors 
+# Series: estimation.window.sales 
+# Regression with ARIMA(1,0,1)(0,0,1)[7] errors 
+# 
+# Coefficients:
+#          ar1      ma1    sma1  intercept    xreg
+#       0.5859  -0.2709  0.1242    78.0997  0.6206
+# s.e.  0.1327   0.1554  0.0646    47.8684  0.0768
+# 
+# sigma^2 estimated as 14575:  log likelihood=-1507.24
+# AIC=3026.48   AICc=3026.83   BIC=3047.43
 
-Coefficients:
-         ar1      ma1    sma1  intercept    xreg
-      0.5859  -0.2709  0.1242    78.0997  0.6206
-s.e.  0.1327   0.1554  0.0646    47.8684  0.0768
+fit.3.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = my.campaigns)
+fit.3.xreg 
+# Series: estimation.window.sales 
+# Regression with ARIMA(2,1,2)(0,0,1)[7] errors 
+# 
+# Coefficients:
+#           ar1     ar2      ma1      ma2    sma1   drift          
+#       -0.4141  0.3046  -0.2354  -0.7082  0.2292  1.3995  188.0186
+# s.e.   0.3365  0.1054   0.3436   0.3294  0.0635  0.5535   36.8917
+# 
+# sigma^2 estimated as 15004:  log likelihood=-1504.4
+# AIC=3024.8   AICc=3025.41   BIC=3052.71
 
-sigma^2 estimated as 14575:  log likelihood=-1507.24
-AIC=3026.48   AICc=3026.83   BIC=3047.43
+fit.4.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = cbind(estimation.window.webvisits, my.campaigns))
+fit.4.xreg 
+# Series: estimation.window.sales 
+# Regression with ARIMA(2,0,2)(1,0,1)[7] errors 
+# 
+# Coefficients:
+#          ar1      ar2      ma1     ma2    sar1     sma1  intercept
+#       1.3192  -0.6133  -1.1015  0.4989  0.8554  -0.7496    79.5246
+# s.e.  0.2656   0.2137   0.2757  0.2161  0.1105   0.1326    54.7130
+#       estimation.window.webvisits  my.campaigns
+#                            0.5844      173.0715
+# s.e.                       0.0913       31.7842
+# 
+# sigma^2 estimated as 13246:  log likelihood=-1493.79
+# AIC=3007.58   AICc=3008.53   BIC=3042.51
+
+fit.5.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  my.estimation.window.outliers$effects)
+fit.5.xreg 
+# Series: estimation.window.sales 
+# Regression with ARIMA(0,0,1)(1,0,1)[7] errors 
+# 
+# Coefficients:
+#          ma1    sar1     sma1  intercept    xreg
+#       0.2589  0.9117  -0.7942   315.4138  0.9671
+# s.e.  0.0572  0.0918   0.1428    20.4329  0.0820
+# 
+# sigma^2 estimated as 12108:  log likelihood=-1485.3
+# AIC=2982.61   AICc=2982.96   BIC=3003.57
 
 
-Box.test(fit.2.xreg$resid, lag=30, fitdf=3, type='Ljung')$p.value  # fitdf p+q + P + Q
-[1] 0.8294632
+fit.6.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  cbind(estimation.window.outlier.effects, estimation.window.webvisits))
+fit.6.xreg 
+# Series: estimation.window.sales 
+# Regression with ARIMA(0,0,1)(0,0,1)[7] errors 
+# 
+# Coefficients:
+#          ma1    sma1  intercept  estimation.window.outlier.effects
+#       0.2440  0.1619   201.4675                             0.7719
+# s.e.  0.0572  0.0623    38.4975                             0.0980
+#       estimation.window.webvisits
+#                            0.2430
+# s.e.                       0.0755
+# 
+# sigma^2 estimated as 12092:  log likelihood=-1484.53
+# AIC=2981.06   AICc=2981.42   BIC=3002.02
 
-tsdisplay(fit.2.xreg$resid, lag.max = 30)
 
-
-fit.3 <- auto.arima((my.ts), max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 1, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = FALSE, xreg = my.campaigns)
-
-fit.4 <- auto.arima((my.ts), max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 1, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = FALSE, xreg = cbind(my.campaigns, my.webvisits))
-
-fit.6 <- auto.arima((my.ts), max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 1, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = FALSE, xreg = cbind(my.Expos, my.webvisits, my.outliers$effects), parallel = TRUE, num.cores = 3, ic='bic')
+fit.7.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  cbind(estimation.window.outlier.effects, estimation.window.webvisits, my.campaigns))
+fit.7.xreg 
+# Series: estimation.window.sales 
+# Regression with ARIMA(0,0,1)(1,0,1)[7] errors 
+# 
+# Coefficients:
+#          ma1    sar1     sma1  intercept  estimation.window.outlier.effects
+#       0.2084  0.8657  -0.7524   189.8716                             0.6979
+# s.e.  0.0588  0.1090   0.1426    41.3306                             0.0995
+#       estimation.window.webvisits  my.campaigns
+#                            0.2567      105.1177
+# s.e.                       0.0777       27.1298
+# 
+# sigma^2 estimated as 11232:  log likelihood=-1474.84
+# AIC=2965.68   AICc=2966.29   BIC=2993.62
 ```
 
-fit.1.sales.extended <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 0, trace = TRUE, stepwise = FALSE, max.order = 10, allowmean = TRUE, ic = 'bic', parallel = TRUE, num.cores = 4)
+Being a little bit blind of the overidentification and endogeneity problems (the information of `my.campaigns` and `estimation.window.outlier.effects` is similar, except the level shift), and only for demonstration purposes
+we choose the `fit.6.xreg` model for the forecast.
 
-
-
-
-> fit.1.sales.extended
-Series: estimation.window.sales 
-ARIMA(2,1,1)(1,0,1)[7] 
-
-Coefficients:
-         ar1     ar2      ma1    sar1     sma1
-      0.3906  0.1651  -0.9757  0.9279  -0.7720
-s.e.  0.0670  0.0677   0.0182  0.0501   0.0936
-
-sigma^2 estimated as 15181:  log likelihood=-1507.51
-AIC=3027.03   AICc=3027.38   BIC=3047.96
-
+```r
+Box.test(fit.6.xreg$resid, lag=30, fitdf=3, type='Ljung')$p.value  # fitdf p+q + P + Q
+# [1] 0.6936533
+```
 
 
 
 ## 3. Forecasting
+### 3.1 Without a new marketing campaign
+To forecast the sales with the selected ARIMAX model, we must first forecast the selected external regressors:
+* the web visits,
+* the existence of a marketing campaign (without a new marketing campaign, this corresponds to 0)
+* the outliers (without a new marketing campaign, this corresponds to the the level shift, wich is the last value of the `estimation.window.outlier.effects`)
+
+```r
+fit.webvisits <- auto.arima(estimation.window.webvisits, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE)
+forecasted.webvisits <- forecast(fit.webvisits, h = 30)$mean
+
+forecasted.marketing.campaigns <- rep(0, 30)
+
+forecasted.outlier.effects <- rep(estimation.window.outlier.effects[length(estimation.window.outlier.effects)], 30)
+
+future.external.regressors <- cbind(forecasted.outlier.effects, forecasted.webvisits, forecasted.marketing.campaigns) # the order of the regressors must be the same as in fit.7.xreg!
+
+
+
+forecast(fit.7.xreg , newxreg = future.external.regressors)
+fit.forecast <- forecast(fit.7.xreg , xreg = cbind(forecasted.webvisits, forecasted.marketing.campaigns, forecasted.outlier.effects)) 
+
+plot(forecast(fit.forecast, h = 14))
+
+plot(forecast(fit.1.sales), h = 30))
+plot(forecast(fit.3.xreg, xreg = forecasted.marketing.campaigns, h = 30))
+plot(forecast(fit.7.xreg, xreg = future.external.regressors, h = 30))
+
+plot(forecast(fit.7.xreg, xreg = future.external.regressors, h = 30))
+```
+
+
+### 3.2 With a new marketing campaign
+
+
 ## 4. Decision making
 
 
