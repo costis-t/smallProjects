@@ -512,6 +512,7 @@ Nevertheless, purely for demonstration purposes I do consider both of them.
 
 First, we create the matrix of the external regressors.
 Let's try to incorporate the marketing campains.
+
 ```r
 my.ts.DT[, campaign := 0]
 my.ts.DT[date >= '2016-09-15' & date <= '2016-09-23', campaign := 1]
