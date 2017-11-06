@@ -561,6 +561,7 @@ dev.off()
 ![Estimation Window Outliers](figures/15-estimation-window-outliers.png)
 
 To find the ideal model for this tutorial, I consider the models of the following table
+
 | Model | External regresor | BIC |
 | ----- | ----------------- | --- |
 | ARIMA((1,1,1)(0,0,1)[7]) with drift | none | 3060.7 |
