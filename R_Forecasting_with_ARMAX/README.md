@@ -1,5 +1,5 @@
 # Overview - under editing
-In this sample, I analyze a sales time-series and I identify whether there is a permanent impact of marketing campaigns on a sales time-series.
+In this sample tutorial, I analyze a sales time-series and I identify whether there is a permanent impact of marketing campaigns on a sales time-series.
 I also forecast the sales time-series for one month with and without an imminent marketing campaing using ARMAX modelling.
 
 #### Table of Contents
@@ -27,7 +27,6 @@ I also forecast the sales time-series for one month with and without an imminent
 For the analysis, start by installing the necessary packages.
 This step can be skipped if we have already installed the necessary packages.
 
-imputeTS
 
 ```r
 sapply(c('astsa', 'forecastxgb', 'TStools', 'smooth', 'GDMH', 'caret', 'nnet', 'tsoutliers', 'colorout', 'data.table', 'randomNames', 'xtable', 'lubridate', 'compare', 'ggplot2', 'zoo',
@@ -114,7 +113,7 @@ In the rest of the document I skip such trivial details and I also take similar 
 DT[, c('V1', 'date') := .(NULL, as.Date(date))]
 ```
 
-Now we have the following `DT`
+Now we have the following `DT`:
 ```r
 str(DT)
 # Classes ‘data.table’ and 'data.frame':  1200 obs. of  3 variables:
@@ -134,7 +133,7 @@ dev.off()
 
 ## 1.3. Data quality
 Let's see if we have any missing values; days with no data.
-Create a sequence of dates from the first till the last day of `DT`.
+Create a sequence of dates from the first till the last day of `DT` and compare the lengths of the original dataset to the sequence of dates.
 ```r
 date.grid <- seq(as.Date(min(DT[, date])), as.Date(max(DT[, date])), by = 'day')
 length(date.grid)
@@ -194,7 +193,7 @@ The following Figure shows that the `sales` seem to follow:
 This suggest that a regime-switching model could also be appropriate for such data. 
 We don’t see linear, but a polynomial, trend for the whole time-series, which is common for sales data. 
 We also see structural breaks (at least in level and variance) which influences the unit root tests and need further exploration. 
-I follow [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract) and the BIC criterion suggests 3 breaks (four would not make a large difference, thouggh) and confirms my visual perception.
+I follow [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract) and the BIC criterion suggests 3 breaks (four would not make a large difference, thouggh) and confirms the visual perception.
 
 ## 2.2. Graph with outliers and smoothing curves
 Let's create a beautiful graph for the data!
@@ -210,10 +209,10 @@ outliers.NAs <- rep(NA, length(DT[, sales]))
 outliers.NAs[omad$ind] <- DT[, sales][omad$ind]
 ```
 
-If we are further interested in the outliers, we should proceed to parameter calibration for the Hampel filter, but for this "tutorial analysis" it is not necessary.
+If we are further interested in the outliers, we should proceed to parameter calibration for the Hampel filter, but for this tutorial analysis it is not necessary.
 Ideally, we forecast with and without the outliers, calibrate their corrections and identify whether they are indeed outliers or indicate a response to an event (which seems plausible for the 3 outliers during the marketing campaigns). 
 Please refer to [Tsay (1988)](http://onlinelibrary.wiley.com/doi/10.1002/for.3980070102/abstract) and [Watson (2001)](http://eprints.whiterose.ac.uk/2209/1/ITS261_WP362_uploadable.pdf) for various outlier types (additive/level shifts/etc.) and techniques for their correction as a starting point. 
-At a more advanced stage, we could use a non-linear moving window and parameter calibration.
+For example, at a more advanced stage, we could use a non-linear moving window and parameter calibration.
 
 The following figure, also includes three smoothing functions with different coarseness, following a LOESS fitted curve with correspondingly different parameters.
 
@@ -270,9 +269,10 @@ Cross-correlation would indicate whether people examine thoroughly the product b
 
 Moreover, the sales time-series graph of the previous section shows a gradual increase in variance over time while the level of enquiries also increases. 
 This could be an indication of ARCH errors/innovations if it didn’t seem so gradual but clustered. 
-Hence, I could transform the enquiries with a power transformation, which s seems to be the best simple transformation. 
+Hence, I could transform the enquiries with a power transformation, which seems to be the best simple transformation. 
 The optimal Box-Cox λ refers to a logarithmic transformation and transposes the increased variance position to the beginning of the series.
 For experimentation, please refer to the `BoxCox.lambda()` and `BoxCox()` functions of the `forecast` package in R.
+Because there are breaks and the analysis concerns a simple tutorial, I do not proceed to such a transformation.
 
 ### 2.3.2. Breaks
 Ideally, we do not want mean, variance, autocorrelation and relationship breaks for the time-series for sound inference. 
@@ -283,7 +283,7 @@ Even in non optimal cases with 2, 4 or 5 breaks the last break is on 2016-10-30.
 For further exploration, Pesaran and Timmermann propose a calculation for the ideal estimation windows which I skip as it does not seem so critical for the purpose of this analysis.
 Another possibility would be to consider outlier events, like level shifts, but there is no need for extensive intervention analysis throughout the series for this analysis.
 
-To find out the breaks we work with the `tsoutliers` package in R.
+For this simple tutorial analysis, to locate the breaks we work with the `tsoutliers` package in R.
 ```r
 my.ts.DT <- DT[, .(date, sales, webvisits)] 
 day.of.year <- as.numeric(format(my.ts.DT[, date][1], '%j'))
@@ -340,6 +340,7 @@ plot(efp(my.ts ~ 1, type = 'Rec-CUSUM'))
 plot(efp(my.ts ~ 1, type = 'OLS-CUSUM'))
 ```
 
+The following graph presents the estimation window for the forecast in order to have a better view of the data series.
 ```r
 my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 365)
 plot.ts(my.ts)
@@ -398,12 +399,12 @@ kpss.test(my.ts)
 ```
 
 The stationarity tests do not indicate a stochastic trend.
-Nevertheless, there seems to be visually and with a test deterministic trend (`sales` increase by 0.372453 per day (`summary(lm(DT[, sales] ~ seq(1:length(DT[, sales]))))`)). 
+Nevertheless, there seems to be visually and with a test deterministic trend (`sales` increase by 0.372453 per day (as we understand from:`summary(lm(DT[, sales] ~ seq(1:length(DT[, sales]))))`)). 
 Note that proper trend analysis in serially correlated series like in our case demands the calculation of Vogelsang ([1998a](https://rmgsc.cr.usgs.gov/outgoing/threshold_articles/Vogelsang1998b.pdf), [1998b](https://www.jstor.org/stable/2527353?seq=1#page_scan_tab_contents)) statistics. 
 
 Also, the stationarity tests, as well as the Box-Cox transformation above are heavily influenced by the presense of breaks.
-For more theory, consult [Charfeddine and Gu\'egan](https://ac.els-cdn.com/S0378437112005407/1-s2.0-S0378437112005407-main.pdf?_tid=145a548e-bffb-11e7-bcb7-00000aacb360&acdnat=1509647256_f0029583e43c334803924ccb2077130c), [Glyn, Perera and Verma (2007)](https://www.upo.es/revistas/index.php/RevMetCuant/article/view/2065), [Carrion-i-Silvestre, Kim and Perron (2009)](https://www.jstor.org/stable/pdf/40388611.pdf), [Perron (2017)](http://www.mdpi.com/2225-1146/5/2/22/pdf)..
-Following  [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract), the estimation window contains 4 breaks:
+For more theory, consult [Charfeddine and Gu\'egan](https://ac.els-cdn.com/S0378437112005407/1-s2.0-S0378437112005407-main.pdf?_tid=145a548e-bffb-11e7-bcb7-00000aacb360&acdnat=1509647256_f0029583e43c334803924ccb2077130c), [Glyn, Perera and Verma (2007)](https://www.upo.es/revistas/index.php/RevMetCuant/article/view/2065), [Carrion-i-Silvestre, Kim and Perron (2009)](https://www.jstor.org/stable/pdf/40388611.pdf), [Perron (2017)](http://www.mdpi.com/2225-1146/5/2/22/pdf).
+Following  [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract), the estimation window contains 3 breaks:
 
 ```r
 breakpoints(my.ts ~ 1)
@@ -418,8 +419,57 @@ breakpoints(my.ts ~ 1)
 # 2059(3) 2065(5) 2072(2) 
 ```
 
-To keep this tutorial analysis simple, I consider only one break in mean as determined above on 2016-10-30, which I let it enter the ARMAX model as an external regressor and I do not proceed to a BoxCox transformation.
+To keep this tutorial analysis simple, I consider only one break in mean on 2016-12-25, which I let it enter the ARMAX model as an external regressor and I do not proceed to a BoxCox transformation.
 
+```r
+estimation.window.DT <- my.ts.DT[date >= '2016-09-01']
+estimation.window.ts <- ts(estimation.window.DT[, sales], start = c(2016, as.integer(strftime('2016-09-01', format = '%j'))), frequency = 365)
+
+outliers.tso <- tso(estimation.window.ts) # it takes some minutes
+
+plot(outliers.tso)
+bp.ri <- breakpoints(estimation.window.ts ~ 1)
+summary(bp.ri)
+#          Optimal (m+1)-segment partition: 
+# 
+# Call:
+# breakpoints.formula(formula = estimation.window.ts ~ 1)
+# 
+# Breakpoints at observation number:
+#                          
+# m = 1         116        
+# m = 2         116 164    
+# m = 3      74 118 164    
+# m = 4   46 82 118 164    
+# m = 5   46 82 118 164 200
+# 
+# Corresponding to breakdates:
+#                                                                            
+# m = 1                                     2016.98356164384                 
+# m = 2                                     2016.98356164384 2017.11506849315
+# m = 3                    2016.86849315069 2016.98904109589 2017.11506849315
+# m = 4   2016.79178082192 2016.8904109589  2016.98904109589 2017.11506849315
+# m = 5   2016.79178082192 2016.8904109589  2016.98904109589 2017.11506849315
+#                         
+# m = 1                   
+# m = 2                   
+# m = 3                   
+# m = 4                   
+# m = 5   2017.21369863014
+# 
+# Fit:
+#                                                    
+# m   0       1       2       3       4       5      
+# RSS 7382873 4716773 4383379 4140361 4101369 4096778
+# BIC    3209    3111    3104    3101    3110    3121
+plot(bp.ri) # BIC indicates three breaks
+plot(estimation.window.ts, type = 'l')
+lines(fitted(bp.ri, breaks = 3), col = 4)
+lines(confint(bp.ri, breaks = 3))
+estimation.window.DT[116]
+#          date sales webvisits
+# 1: 2016-12-25   151       346
+```
 
 ## 2.4. ARIMAX modelling
 
