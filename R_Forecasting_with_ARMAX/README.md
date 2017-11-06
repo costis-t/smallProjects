@@ -474,6 +474,9 @@ For more theory, consult [Charfeddine and Gu\'egan](https://ac.els-cdn.com/S0378
 
 ## 2.4. ARIMAX modelling
 
+`auto.arima()` provides a way to choose the optimal ARIMA model for the time-series.
+Setting the `stepwise` option as `TRUE` forces a fast stepwise selection.
+For real-life work this option should be set as `FALSE`, but for the purposes of this tutorial `TRUE` is fine. 
 ### ARIMA
 ```r
 estimation.window.DT <- my.ts.DT[date >= '2016-09-01']
@@ -491,16 +494,70 @@ fit.1.sales
 # 
 # sigma^2 estimated as 16406:  log likelihood=-1516.63
 # AIC=3043.26   AICc=3043.51   BIC=3060.7
-Box.test(fit.1$resid, lag=30, fitdf=3, type='Ljung')$p.value  # fitdf p+q + P + Q
-tsdisplay(fit.1$resid, lag.max = 30)
+Box.test(fit.1.sales$resid, lag=30, fitdf=3, type='Ljung')$p.value  # fitdf p+q + P + Q
+# [1] 0.07378881                                                                                                           
+tsdisplay(fit.1.sales$resid, lag.max = 30)
 ```
 The best fitted simple ARIMA with seasonality is the ARIMA(1,1,1)(0,0,1)[7] with BIC 3060.7. 
-Ideally, I would proceed to cross-validation/out-of-sample tests and extensive calibration, though. 
+For real-life analysis, we should also proceed to cross-validation/out-of-sample tests and extensive calibration without a stepwise selection, though. 
 Ljung-Box shows that the residuals can be considered white noise. 
-The portmanteau test does not reveal serial correlation for the first 20 lags of the model and I go forward to forecasting.
-fit.1.sales.extended <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 0, trace = TRUE, stepwise = FALSE, max.order = 10, allowmean = TRUE, ic = 'bic', num.cores = 3)
+The portmanteau test does not reveal serial correlation for the first 10 lags of the model and we can proceed to forecasting.
 
 ### ARIMAX
+Using external regressors on an AR(I)MAX model (creating a dynamic regression model) could potentially increase the Bayesian Information Criterion (BIC).
+In our case, the only external regressors we have is the webvisits (which are highly correlated to the sales time-series), the existence of a marketing campaign and the outlier effects.
+To be truthful in our analysis, the information present in our outlier effects is extracted from the sales time-series so including them as regressors could lead to endogeneity problems.
+Moreover, the high Pearson correlation coefficient of 0.875 (`cor(DT[, webvisits], DT[, sales])`) between the webvisits and sales is an alert for multi-collinearity problems.
+Nevertheless, purely for demonstration purposes I do consider both of them.
+
+First, we create the matrix of the external regressors.
+Let's try to incorporate the marketing campains.
+
+my.ts.DT[, campaign := 0]
+my.ts.DT[date >= '2016-09-15' & date <= '2016-09-23', campaign := 1]
+my.ts.DT[date >= '2016-11-25' & date <= '2016-11-29', campaign := 1]
+my.ts.DT[date >= '2017-01-25' & date <= '2017-02-03', campaign := 1]
+
+my.campaigns <-  as.matrix(my.ts.DT[date >= '2016-09-01', campaign], start = c(2014, 245), frequency = 7)
+```
+The following, also suggests we have 4 outliers in our estimation window:
+1. An additive outliwer on the 22nd day.
+2. Two temporary changes on the 89th and 152nd day.
+3. A level shift on the 117th day.
+
+The additive outlier and the two temporary changes correspond to the marketing campaigns.
+So, the marketing campaigns do have an impact on sales.
+Nevertheless, their impact is not permanent, since around the 117th day there is no marketing campaign.
+We should certainly try to identify why this permanent level shift occured!
+For the particular time-series and solve this mystery of the level shift, the level shift occured due to external factors out of the influence of the specific firm. 
+
+```r
+my.estimation.window.outliers <- tso(estimation.window.ts)
+my.estimation.window.outliers
+# Series: estimation.window.ts 
+# Regression with ARIMA(1,0,1) errors 
+# 
+# Coefficients:
+#          ar1     ma1  intercept      AO22      TC89     LS117     TC152
+#       0.2483  0.0557   315.5587  391.3931  573.1568  218.3963  486.9718
+# s.e.  0.1819  0.1844    14.9565  108.2156  101.3114   20.6134  100.2111
+# 
+# sigma^2 estimated as 13103:  log likelihood=-1493.19
+# AIC=3002.38   AICc=3002.99   BIC=3030.32
+# 
+# Outliers:
+#   type ind     time coefhat  tstat
+# 1   AO  22 2016:266   391.4  3.617
+# 2   TC  89 2016:333   573.2  5.657
+# 3   LS 117 2016:361   218.4 10.595
+# 4   TC 152  2017:31   487.0  4.859
+
+png(file= 'figures/15-estimation-window-outliers.png')
+ts.plot(my.estimation.window.outliers$effects, main = "5. Estimation Window outliers")
+dev.off()
+```
+![Estimation Window Outliers](figures/15-estimation-window-outliers.png)
+
 ```r
 fit.2.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = estimation.window.webvisits)
 fit.2.xreg 
@@ -521,14 +578,6 @@ Box.test(fit.2.xreg$resid, lag=30, fitdf=3, type='Ljung')$p.value  # fitdf p+q +
 
 tsdisplay(fit.2.xreg$resid, lag.max = 30)
 
-Let's try to incorporate the marketing campains
-
-my.ts.DT[, campaign := 0]
-my.ts.DT[date >= '2016-09-15' & date <= '2016-09-23', campaign := 1]
-my.ts.DT[date >= '2016-11-25' & date <= '2016-11-29', campaign := 1]
-my.ts.DT[date >= '2017-01-25' & date <= '2017-02-03', campaign := 1]
-
-my.campaigns <-  as.matrix(my.ts.DT[date >= '2016-09-01', campaign], start = c(2014, 245), frequency = 7)
 
 fit.3 <- auto.arima((my.ts), max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 1, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = FALSE, xreg = my.campaigns)
 
