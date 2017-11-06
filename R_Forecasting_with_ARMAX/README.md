@@ -124,7 +124,7 @@ str(DT)
 ```
 I also create a simple time-series plot to see if everything looks fine.
 ```r
-png(file= 'figures/01-simple-sales-graph.pdf')
+png(file = 'figures/01-simple-sales-graph.pdf')
 ggplot(data = DT, aes(date, sales)) + geom_line() + ggtitle('1. Sales simple graph') + ylab('Sales') + xlab('Date')
 dev.off()
 ```
@@ -167,7 +167,7 @@ DT <- DT[date.grid.DT]
 DT[, c('webvisits.withNA', 'sales.withNA') := .(webvisits, sales)]
 DT[, c('webvisits', 'sales') := .(na.kalman(webvisits), na.kalman(sales))]
 
-png(file= 'figures/02-first-150-imputed-values-for-sales-graph.png')
+png(file = 'figures/02-first-150-imputed-values-for-sales-graph.png')
 plotNA.imputations(DT[1:150, sales.withNA], DT[1:150, sales], ylab = 'sales', main = 'Visualization of the Imputed Values')
 dev.off()
 ```
@@ -252,7 +252,7 @@ ggsave(filename = 'figures/03-sales-graph.png', plot = figure, height = 90, unit
 I start with correlation analysis.
 
 ```r
-png(file= 'figures/04-ACF-and-PACF-of-sales.png')
+png(file = 'figures/04-ACF-and-PACF-of-sales.png')
 tsdisplay(DT[, sales], main = "4. DT[, sales]")
 dev.off()
 ```
@@ -526,11 +526,12 @@ The following, also suggests we have 4 outliers in our estimation window:
 2. Two temporary changes on the 89th and 152nd day.
 3. A level shift on the 117th day.
 
-The additive outlier and the two temporary changes correspond to the marketing campaigns.
-So, the marketing campaigns do have an impact on sales.
+The additive outlier and the two temporary changes correspond to the three marketing campaigns.
+So, the marketing campaigns do have an impact on sales, which is also evident from figure 3 above.
 Nevertheless, their impact is not permanent, since around the 117th day there is no marketing campaign.
 We should certainly try to identify why this permanent level shift occured!
-For the particular time-series and solve this mystery of the level shift, the level shift occured due to external factors out of the influence of the specific firm. 
+For the particular time-series and solve this mystery of the level shift, the level shift occured due to external factors out of the influence of the specific firm and it wasn't due to a lagged effect of the previous marketing campaigns.
+
 
 ```r
 my.estimation.window.outliers <- tso(estimation.window.ts)
@@ -553,11 +554,22 @@ my.estimation.window.outliers
 # 3   LS 117 2016:361   218.4 10.595
 # 4   TC 152  2017:31   487.0  4.859
 
-png(file= 'figures/15-estimation-window-outliers.png')
-ts.plot(my.estimation.window.outliers$effects, main = "5. Estimation window outliers")
+png(file = 'figures/15-estimation-window-outliers.png')
+ts.plot(my.estimation.window.outliers$effects, main = '5. Estimation window outliers')
 dev.off()
 ```
 ![Estimation Window Outliers](figures/15-estimation-window-outliers.png)
+
+To find the ideal model for this tutorial, I consider the models of the following table
+| Model | External regresor | BIC |
+| ----- | ----------------- | --- |
+| ARIMA((1,1,1)(0,0,1)[7]) with drift | none | 3060.7 |
+| ARIMA(1,0,1)(0,0,1)[7] | `webvisits` | 3047.43 |
+
+
+For the purposes of accurate work, such analyses are advised to be automated through a [make-type-of-file](https://robjhyndman.com/hyndsight/makefiles/) or a master script and as mentioned above, `stepwise` should be set to `FALSE`.
+Also, note that ARIMA-based intervals are generally too narrow and that historical patterns will repeat for the forecasting period.
+
 
 ```r
 fit.2.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = estimation.window.webvisits)
@@ -584,12 +596,10 @@ fit.3 <- auto.arima((my.ts), max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, m
 
 fit.4 <- auto.arima((my.ts), max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 1, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = FALSE, xreg = cbind(my.campaigns, my.webvisits))
 
-my.outliers <- tso(my.ts)
-
-my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2016, 245), frequency = 365)
 fit.6 <- auto.arima((my.ts), max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 1, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = FALSE, xreg = cbind(my.Expos, my.webvisits, my.outliers$effects), parallel = TRUE, num.cores = 3, ic='bic')
 ```
- fit.1.sales.extended <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 0, trace = TRUE, stepwise = FALSE, max.order = 10, allowmean = TRUE, ic = 'bic', parallel = TRUE, num.cores = 4)
+
+fit.1.sales.extended <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 0, trace = TRUE, stepwise = FALSE, max.order = 10, allowmean = TRUE, ic = 'bic', parallel = TRUE, num.cores = 4)
 
 
 
@@ -606,17 +616,6 @@ s.e.  0.0670  0.0677   0.0182  0.0501   0.0936
 sigma^2 estimated as 15181:  log likelihood=-1507.51
 AIC=3027.03   AICc=3027.38   BIC=3047.96
 
-
-I only mention some highlights of further experimentation, to conserve space. 
-For the transformed series, the best fitted ARMA without seasonality is the ARMA(2,0,1). 
-The best fitted ARMA with seasonality is the ARMA(4,0,3)(0,0,2)[7]. 
-For this analysis, I skip cross-validation/out-of-sample tests, to conserve space.
-I would choose the ARMA(2,0,1) for conservative reasons:
-it is simpler, the AIC/BIC of the two are very close and ARIMA(4,0,3)(0,0,2)[7] may be prone to overfitting. 
-However, for the purposes of this particular analysis and its constraints I do not make any transformation calibration. 
-For the purposes of accurate work, such analyses are advised to be automated through a [make-type-of-file](https://robjhyndman.com/hyndsight/makefiles/) or a master script.
-
-Note that ARIMA-based intervals are generally too narrow and that historical patterns will repeat for the forecasting period.
 
 
 
