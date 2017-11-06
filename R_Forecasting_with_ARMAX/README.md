@@ -512,7 +512,7 @@ Nevertheless, purely for demonstration purposes I do consider both of them.
 
 First, we create the matrix of the external regressors.
 Let's try to incorporate the marketing campains.
-
+```r
 my.ts.DT[, campaign := 0]
 my.ts.DT[date >= '2016-09-15' & date <= '2016-09-23', campaign := 1]
 my.ts.DT[date >= '2016-11-25' & date <= '2016-11-29', campaign := 1]
@@ -553,7 +553,7 @@ my.estimation.window.outliers
 # 4   TC 152  2017:31   487.0  4.859
 
 png(file= 'figures/15-estimation-window-outliers.png')
-ts.plot(my.estimation.window.outliers$effects, main = "5. Estimation Window outliers")
+ts.plot(my.estimation.window.outliers$effects, main = "5. Estimation window outliers")
 dev.off()
 ```
 ![Estimation Window Outliers](figures/15-estimation-window-outliers.png)
