@@ -374,36 +374,6 @@ ggsave(filename = 'figures/10-graph-estimation-window.png', plot = figure, heigh
 ```
 
 ![Sales Estimation Window](figures/10-graph-estimation-window.png)
-
-### 2.3.3. Stationarity
-We must also perform stationarity tests (see `adf.test()`, `pp.test()`, `kpss.test()` of the `tseries` package in R).
-The series are non-stationary for the whole period and the selected estimation window.
-```r
-adf.test(my.ts, alternative = 'stationary')
-#         Augmented Dickey-Fuller Test
-# data:  my.ts
-# Dickey-Fuller = -3.1108, Lag order = 6, p-value = 0.1085 # null of non-stationarity is not rejected at 0.05
-# alternative hypothesis: stationary
-
-pp.test(my.ts)
-#         Phillips-Perron Unit Root Test
-# data:  my.ts
-# Dickey-Fuller Z(alpha) = -131.51, Truncation lag parameter = 4, p-value = 0.01 # null of stationarity is rejected at 0.05
-# alternative hypothesis: stationary
-
-kpss.test(my.ts)
-#         KPSS Test for Level Stationarity
-# 
-# data:  my.ts
-# KPSS Level = 2.8092, Truncation lag parameter = 3, p-value = 0.01 # null of stationarity is rejected at 0.05
-```
-
-The stationarity tests do not indicate a stochastic trend.
-Nevertheless, there seems to be visually and with a test deterministic trend (`sales` increase by 0.372453 per day (as we understand from:`summary(lm(DT[, sales] ~ seq(1:length(DT[, sales]))))`)). 
-Note that proper trend analysis in serially correlated series like in our case demands the calculation of Vogelsang ([1998a](https://rmgsc.cr.usgs.gov/outgoing/threshold_articles/Vogelsang1998b.pdf), [1998b](https://www.jstor.org/stable/2527353?seq=1#page_scan_tab_contents)) statistics. 
-
-Also, the stationarity tests, as well as the Box-Cox transformation above are heavily influenced by the presense of breaks.
-For more theory, consult [Charfeddine and Gu\'egan](https://ac.els-cdn.com/S0378437112005407/1-s2.0-S0378437112005407-main.pdf?_tid=145a548e-bffb-11e7-bcb7-00000aacb360&acdnat=1509647256_f0029583e43c334803924ccb2077130c), [Glyn, Perera and Verma (2007)](https://www.upo.es/revistas/index.php/RevMetCuant/article/view/2065), [Carrion-i-Silvestre, Kim and Perron (2009)](https://www.jstor.org/stable/pdf/40388611.pdf), [Perron (2017)](http://www.mdpi.com/2225-1146/5/2/22/pdf).
 Following  [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract), the estimation window contains 3 breaks:
 
 ```r
@@ -470,6 +440,37 @@ estimation.window.DT[116]
 #          date sales webvisits
 # 1: 2016-12-25   151       346
 ```
+
+
+### 2.3.3. Stationarity
+We must also perform stationarity tests (see `adf.test()`, `pp.test()`, `kpss.test()` of the `tseries` package in R).
+The series are non-stationary for the whole period and the selected estimation window.
+```r
+adf.test(my.ts, alternative = 'stationary')
+#         Augmented Dickey-Fuller Test
+# data:  my.ts
+# Dickey-Fuller = -3.1108, Lag order = 6, p-value = 0.1085 # null of non-stationarity is not rejected at 0.05
+# alternative hypothesis: stationary
+
+pp.test(my.ts)
+#         Phillips-Perron Unit Root Test
+# data:  my.ts
+# Dickey-Fuller Z(alpha) = -131.51, Truncation lag parameter = 4, p-value = 0.01 # null of stationarity is rejected at 0.05
+# alternative hypothesis: stationary
+
+kpss.test(my.ts)
+#         KPSS Test for Level Stationarity
+# 
+# data:  my.ts
+# KPSS Level = 2.8092, Truncation lag parameter = 3, p-value = 0.01 # null of stationarity is rejected at 0.05
+```
+
+The stationarity tests do not indicate a stochastic trend.
+Nevertheless, there seems to be visually and with a test deterministic trend (`sales` increase by 0.372453 per day (as we understand from:`summary(lm(DT[, sales] ~ seq(1:length(DT[, sales]))))`)). 
+Note that proper trend analysis in serially correlated series like in our case demands the calculation of Vogelsang ([1998a](https://rmgsc.cr.usgs.gov/outgoing/threshold_articles/Vogelsang1998b.pdf), [1998b](https://www.jstor.org/stable/2527353?seq=1#page_scan_tab_contents)) statistics. 
+
+Also, the stationarity tests, as well as the Box-Cox transformation above are heavily influenced by the presense of breaks.
+For more theory, consult [Charfeddine and Gu\'egan](https://ac.els-cdn.com/S0378437112005407/1-s2.0-S0378437112005407-main.pdf?_tid=145a548e-bffb-11e7-bcb7-00000aacb360&acdnat=1509647256_f0029583e43c334803924ccb2077130c), [Glyn, Perera and Verma (2007)](https://www.upo.es/revistas/index.php/RevMetCuant/article/view/2065), [Carrion-i-Silvestre, Kim and Perron (2009)](https://www.jstor.org/stable/pdf/40388611.pdf), [Perron (2017)](http://www.mdpi.com/2225-1146/5/2/22/pdf).
 
 ## 2.4. ARIMAX modelling
 
