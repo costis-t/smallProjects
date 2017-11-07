@@ -697,23 +697,92 @@ forecasted.outlier.effects <- rep(estimation.window.outlier.effects[length(estim
 
 future.external.regressors <- cbind(forecasted.outlier.effects, forecasted.webvisits, forecasted.marketing.campaigns) # the order of the regressors must be the same as in fit.7.xreg!
 
-
-
-forecast(fit.7.xreg , newxreg = future.external.regressors)
 fit.forecast <- forecast(fit.7.xreg , xreg = cbind(forecasted.webvisits, forecasted.marketing.campaigns, forecasted.outlier.effects)) 
 
-plot(forecast(fit.forecast, h = 14))
-
-plot(forecast(fit.1.sales), h = 30))
-plot(forecast(fit.3.xreg, xreg = forecasted.marketing.campaigns, h = 30))
 plot(forecast(fit.7.xreg, xreg = future.external.regressors, h = 30))
 
-plot(forecast(fit.7.xreg, xreg = future.external.regressors, h = 30))
+forecast.DT <- data.table(date = seq(as.Date(min(estimation.window.DT[, date])), as.Date(max(DT[, date])) + 30, by = 'day'),
+sales = c(estimation.window.DT[, sales], rep(NA, 30)),
+webvisits = c(estimation.window.DT[, sales], rep(NA, 30)),
+forecasted.sales = c(rep(NA, nrow(estimation.window.DT)), forecast(fit.7.xreg, xreg = future.external.regressors, h = 30)$mean),
+forecasted.upper = c(rep(NA, nrow(estimation.window.DT)), forecast(fit.7.xreg, xreg = future.external.regressors, h = 30)$upper[, '95%']),
+forecasted.lower = c(rep(NA, nrow(estimation.window.DT)), forecast(fit.7.xreg, xreg = future.external.regressors, h = 30)$lower[, '95%'])
+)
+ggplot(forecast.DT) +
+	geom_line(aes(x = date, y = sales), colour = 'black')  +
+	geom_line(aes(x = date, y = forecasted.sales), colour = 'red') +
+	geom_ribbon(aes(x = date, ymin = forecasted.lower, ymax = forecasted.upper), fill = 'darkred', alpha = .2) +
+	scale_x_date(  date_minor_breaks = '1 month', date_labels = '%b', date_breaks = '1 month') +
+    geom_rect(data = campaign.dates[-1, ], aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
+    labs(title = '7. The forecasted Sales for fit.7.xreg',
+               subtitle = 'Marketing campaign periods are grayed. \nForecasted Sales are shown in red along with a 95% prediction interval.',
+               y = 'Sales',
+               x = 'Date') + 
+          list() 
 ```
 
-
 ### 3.2 With a new marketing campaign
+For this case, we will consider a new marketing campaign during the second week of May 2017, which starts on Monday 8th of May.
+For simplicity we will consider this campaign identical to the last campaign in late January, i.e. we will use the same impulse as the new outlier.
 
+```r
+fit.webvisits <- auto.arima(estimation.window.webvisits, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE)
+forecasted.webvisits <- forecast(fit.webvisits, h = 30)$mean
+
+length.of.the.January.campaign <- length(seq(as.Date(campaign.dates[4, ]$campaign.start), as.Date(campaign.dates[4, ]$campaign.end), by = 'day'))
+
+forecasted.marketing.campaigns <- c(rep(0, 6), rep(1, length.of.the.January.campaign), rep(0, 30 - 6 - length.of.the.January.campaign))
+
+forecasted.outlier.effects <- rep(estimation.window.outlier.effects[length(estimation.window.outlier.effects)], 30)
+
+future.external.regressors <- cbind(forecasted.outlier.effects, forecasted.webvisits, forecasted.marketing.campaigns) # the order of the regressors must be the same as in fit.7.xreg!
+
+fit.forecast <- forecast(fit.7.xreg , xreg = cbind(forecasted.webvisits, forecasted.marketing.campaigns, forecasted.outlier.effects)) 
+
+plot(forecast(fit.7.xreg, xreg = future.external.regressors, h = 30))
+
+forecast.DT <- data.table(date = seq(as.Date(min(estimation.window.DT[, date])), as.Date(max(DT[, date])) + 30, by = 'day'),
+sales = c(estimation.window.DT[, sales], rep(NA, 30)),
+webvisits = c(estimation.window.DT[, sales], rep(NA, 30)),
+forecasted.sales = c(rep(NA, nrow(estimation.window.DT)), forecast(fit.7.xreg, xreg = future.external.regressors, h = 30)$mean),
+forecasted.upper = c(rep(NA, nrow(estimation.window.DT)), forecast(fit.7.xreg, xreg = future.external.regressors, h = 30)$upper[, '95%']),
+forecasted.lower = c(rep(NA, nrow(estimation.window.DT)), forecast(fit.7.xreg, xreg = future.external.regressors, h = 30)$lower[, '95%'])
+)
+ggplot(forecast.DT) +
+	geom_line(aes(x = date, y = sales), colour = 'black')  +
+	geom_line(aes(x = date, y = forecasted.sales), colour = 'red') +
+	geom_ribbon(aes(x = date, ymin = forecasted.lower, ymax = forecasted.upper), fill = 'darkred', alpha = .2) +
+	scale_x_date(  date_minor_breaks = '1 month', date_labels = '%b', date_breaks = '1 month') +
+    geom_rect(data = campaign.dates[-1, ], aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
+    labs(title = '7. The forecasted Sales for fit.7.xreg',
+               subtitle = 'Marketing campaign periods are grayed. \nForecasted Sales are shown in red along with a 95% prediction interval.',
+               y = 'Sales',
+               x = 'Date') + 
+          list() 
+```
+outlier.mydata <- tso(estimation.window.sales)
+outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))
+
+tstat <- outliers.tstatistics(coefs2poly(fit.1.sales), residuals(fit.1.sales))
+which(abs(tstat[,"LS","tstat"]) > 3.5)
+resid <- residuals(fit)
+pars <- coefs2poly(fit)
+tstats <- outliers.tstatistics(pars, resid)
+
+outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"]
+tc <- rep(0, length(outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"]))
+tc[152] <- 1
+cor(filter(tc, filter = 0, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
+cor(filter(tc, filter = 0.3, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
+cor(filter(tc, filter = 0.5, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
+cor(filter(tc, filter = 0.7, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
+cor(filter(tc, filter = 0.8, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
+cor(filter(tc, filter = 0.9, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
+cor(filter(tc, filter = 0.7, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
+#
+
+all.equal(as.numeric(filter(tc, filter = 0.7, method = 'recursive')), outliers.effects(outlier.chicken$outliers, n = length(estimation.window.sales))[, "TC152"])
+identical(as.numeric(filter(tc, filter = 0.7, method = 'recursive')), outliers.effects(outlier.chicken$outliers, n = length(estimation.window.sales))[, "TC152"])
 
 ## 4. Decision making
 
