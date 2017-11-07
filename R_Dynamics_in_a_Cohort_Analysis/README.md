@@ -21,6 +21,18 @@ In this sample tutorial, I create a function which generates cohors and analyze 
 - [5. Expansions](#5-expansions)
 
 
+
+![figure](figures/Screenshot_20171107_030752.png)
+![figure](figures/Screenshot_20171107_030855.png)
+![figure](figures/Screenshot_20171107_030920.png)
+![figure](figures/Screenshot_20171107_030929.png)
+![figure](figures/Screenshot_20171107_030943.png)
+![figure](figures/Screenshot_20171107_030953.png)
+![figure](figures/Screenshot_20171107_031003.png)
+![figure](figures/Screenshot_20171107_031011.png)
+![figure](figures/Screenshot_20171107_031023.png)
+![figure](figures/Screenshot_20171107_031040.png)
+![figure](figures/Screenshot_20171107_031301.png)
 # 1. R and Data preparation 
 ## 1.1. Required R packages
 For the analysis, start by installing the necessary packages.
@@ -148,15 +160,3 @@ the tour length: the first includes bookings of tour lengths of at most 9 days a
 second of more than 9 days.
 # 2. Analysis 
 ## 2.1. Helicopter view of the data
-
-![figure](figures/Screenshot_20171107_030752.png)
-![figure](figures/Screenshot_20171107_030855.png)
-![figure](figures/Screenshot_20171107_030920.png)
-![figure](figures/Screenshot_20171107_030929.png)
-![figure](figures/Screenshot_20171107_030943.png)
-![figure](figures/Screenshot_20171107_030953.png)
-![figure](figures/Screenshot_20171107_031003.png)
-![figure](figures/Screenshot_20171107_031011.png)
-![figure](figures/Screenshot_20171107_031023.png)
-![figure](figures/Screenshot_20171107_031040.png)
-![figure](figures/Screenshot_20171107_031301.png)
