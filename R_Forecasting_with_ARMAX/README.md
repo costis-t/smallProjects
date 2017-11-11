@@ -1,5 +1,5 @@
 # Overview - under editing
-In this sample tutorial, I analyze a sales time-series for an online firm and I identify whether there is a permanent impact of given marketing campaigns on a sales time-series.
+In this sample tutorial, I analyze a sales time-series for an online firm and I identify whether there is a permanent impact of given marketing campaigns on the sales time-series.
 I also forecast the sales time-series for one month with and without an imminent marketing campaing using ARIMAX modelling. 
 Along with the sales time-series, we also have access to the web visits time-series and the dates of the marketing campaigns.
 
@@ -26,17 +26,17 @@ Along with the sales time-series, we also have access to the web visits time-ser
 # 1. R and Data preparation 
 ## 1.1. Required R packages
 For the analysis, start by installing the necessary packages.
-This step can be skipped if we have already installed the necessary packages.
+This step can be skipped if we have already installed them.
 
 
 ```r
-sapply(c('data.table', 'tsoutliers', 'colorout', 
+sapply(c('data.table', 'tsoutliers', 'colorout', 'ggplot2', 'imputeTS', 'pracma', 'strucchange', 'tseries', 'forecast'
      ), install.packages) # install packages
 ```
 
 Next, load them with:
 ```r
-sapply(c('data.table', 'tsoutliers', 'colorout'
+sapply(c('data.table', 'tsoutliers', 'colorout', 'ggplot2', 'imputeTS', 'pracma', 'strucchange', 'tseries', 'forecast'
      ), require, character.only = TRUE) # load packages
 ```
 
@@ -105,7 +105,7 @@ dev.off()
 
 ## 1.3. Data quality
 Let's see if we have any missing values; days with no data.
-Create a sequence of dates from the first till the last day of `DT` and compare the lengths of the original dataset to the sequence of dates we just created.
+Create a sequence of dates (`date.grid`) from the first till the last day of `DT` and compare the lengths of the original dataset to the sequence of dates we just created.
 ```r
 date.grid <- seq(as.Date(min(DT[, date])), as.Date(max(DT[, date])), by = 'day')
 length(date.grid)
@@ -116,7 +116,7 @@ nrow(DT)
 
 It seems we do have 17 missing values.
 Which are they? 
-R comes with set operation functions (?setdiff) and we can use a set difference to find them.
+R comes with set operation functions (check `?setdiff`) and we can use a set difference to find them.
 ```r
 setdiff(as.character(date.grid), as.character(DT$date))
 #  [1] "2014-03-01" "2014-05-07" "2014-05-24" "2014-08-09" "2014-08-13"
@@ -128,6 +128,7 @@ All in all, the 17 missing values are located in the first half of the the time 
 From the graph above, we observe noisy seasonality and complex series.
 Hence, we use a Kalman filter to impute the missing values (in simpler cases linear interpolation could also be fine).
 Note, that we proceed to such an interpolation because it does not change the outcome of the analysis! 
+Figure 2 shows the imputed values for the first 150 observations of the sales time-series
 
 ```r
 date.grid.DT <- data.table(date = c(date.grid))
@@ -157,24 +158,27 @@ Ideally, we'd like to have a large increase during and after the marketing campa
 Since there is an intervention variable (marketing campains) an ARIMAX model seems appropriate. 
 Other exogenous variables like the web visits time series can enter the ARIMAX, too.
 
-The following Figure shows that the `sales` seem to follow: 
- * a parallel movement in 2014-early:2015, 
+Figure 1, above, shows that the `sales` seem to follow: 
+ * a parallel movement in 2014--early:2015, 
  * a slightly upward trend during early:2015–early:2016, and 
  * a more vigorous upward trend since mid:2016 with some indication of a potential parallel movement after early:2017. 
  
-This suggest that a regime-switching model could also be appropriate for such data. 
+The aforementioned movements/trends suggest that a regime-switching model could also be appropriate for such data. 
 We don’t see linear, but a polynomial, trend for the whole time-series, which is common for sales data. 
 We also see structural breaks (at least in level and variance) which influences the unit root tests and need further exploration. 
 In the next sections:
 
 * we create a nice figure for the time-series
-* we explore some statistical characteristics (autocorrelation structure, breaks, stationarity, outliers)
+* we explore some statistical characteristics (autocorrelation structure, breaks, stationarity, outliers).
 I follow [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract) and the BIC criterion suggests 3 breaks (four would not make a large difference, though) for the whole sales time-series.
+* we choose the appropriate ARIMAX model
+* we proceed to the forecasts
 
 ## 2.2. Graph with outliers and smoothing curves
 Let's create a beautiful graph for the data!
 
-First, we detect the outliers using the Hampel filter.
+First, we detect the outliers, *in terms of data quality*, using an uncalibrated Hampel filter.
+For more information on the Hampel filter, please consult [Pearson, Neuvo, Astola and Gabbouj (2016)](https://asp-eurasipjournals.springeropen.com/articles/10.1186/s13634-016-0383-6).
 ```r
 outliers.sales <- DT[, sales]
 plot(outliers.sales, type = 'l')
@@ -186,11 +190,12 @@ outliers.NAs[omad$ind] <- DT[, sales][omad$ind]
 ```
 
 If we are further interested in the outliers, we should proceed to parameter calibration for the Hampel filter, but for this tutorial analysis it is not necessary.
-Ideally, we forecast with and without the outliers, calibrate their corrections and identify whether they are indeed outliers or indicate a response to an event (which seems plausible for the 3 outliers during the marketing campaigns). 
+Ideally, we forecast with and without the outliers, calibrate their corrections and identify whether they are indeed outliers or indicate a response to an event. 
+The last, seems plausible for the outliers during the marketing campaigns. 
 Please refer to [Tsay (1988)](http://onlinelibrary.wiley.com/doi/10.1002/for.3980070102/abstract) and [Watson (2001)](http://eprints.whiterose.ac.uk/2209/1/ITS261_WP362_uploadable.pdf) for various outlier types (additive/level shifts/etc.) and techniques for their correction as a starting point. 
 For example, at a more advanced stage, we could use a non-linear moving window and parameter calibration.
 
-The following figure, also includes three smoothing functions with different coarseness, following a LOESS fitted curve with correspondingly different parameters.
+The following Figure 3, also includes three smoothing functions with different coarseness, following a LOESS fitted curve with correspondingly different parameters.
 
 ```r
 campaign.dates <- data.frame(campaign.start =  c(as.Date('2016-01-23'),
@@ -227,7 +232,7 @@ I start with correlation analysis.
 
 ```r
 png(file = 'figures/04-ACF-and-PACF-of-sales.png')
-tsdisplay(DT[, sales], main = "4. DT[, sales]")
+ggtsdisplay(DT[, sales], main = "4. DT[, sales]")
 dev.off()
 ```
 ![ACF and PACF graph](figures/04-ACF-and-PACF-of-sales.png)
@@ -252,12 +257,14 @@ Because there are breaks and the analysis concerns a simple tutorial, I do not p
 Ideally, we do not want mean, variance, autocorrelation and relationship breaks for the time-series for sound inference. 
 [Hansen (2012)](https://www.ssc.wisc.edu/~bhansen/crete/crete5.pdf) says there is no good theory for forecasting for series with breaks and [Perron (2017)](http://www.mdpi.com/2225-1146/5/2/22/pdf) presents recent papers which deal with structural changes and stationarity. 
 According to [Pesaran and Timmermann (2007)](https://www.sciencedirect.com/science00/article/pii/S0304407606000418), in not an identical case, however, the optimal window for starts a bit before the last break. 
-Bai and Perron (2003) method indicates considering three breaks as optimal. 
-Even in non optimal cases with 2, 4 or 5 breaks the last break is on 2016-10-30. Hence, I consider 2016-09-01 as the start of my estimation window. 
-For further exploration, Pesaran and Timmermann propose a calculation for the ideal estimation windows which I skip as it does not seem so critical for the purpose of this analysis.
-Another possibility would be to consider outlier events, like level shifts, but there is no need for extensive intervention analysis throughout the series for this analysis.
+Bai and Perron (2003) method indicates  three breaks as optimal. 
+Even in non-optimal cases with 2, 4 or 5 breaks the last break is on 2016-10-30. Hence, I consider 2016-09-01 as the start of my estimation window. 
+For further exploration, Pesaran and Timmermann propose a calculation for the ideal estimation windows which I skip as it does not seem so critical for the purposes of this tutorial analysis.
+Another possibility would be to consider outlier events, like level shifts.
+There is no need for extensive intervention analysis throughout the series for this analysis, but I briefly indicate how the `tsoutliers` helps us improve the ARIMAX model.
+For more information on `tsoutliers`, please consult its documentison  in [L\'opez-de-Lacalle (2016)](https://jalobe.com/doc/tsoutliers.pdf).
 
-For this simple tutorial analysis, to locate the breaks we work with the `tsoutliers` package in R.
+For this simple tutorial analysis, to locate the breaks we work with the `strucchange` package in R.
 ```r
 my.ts.DT <- DT[, .(date, sales, webvisits)] 
 day.of.year <- as.numeric(format(my.ts.DT[, date][1], '%j'))
