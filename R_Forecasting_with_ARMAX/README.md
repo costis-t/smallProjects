@@ -265,12 +265,12 @@ There is no need for extensive intervention analysis throughout the series for t
 For more information on `tsoutliers`, please consult its documentation in [López-de-Lacalle (2016)](https://jalobe.com/doc/tsoutliers.pdf).
 
 For this simple tutorial analysis, to locate the breaks we work with the `strucchange` package in R.
+Also, I do not consider decomposing seasonality with sophisticated methods, e.g. using the  `Rlibeemd` R package.
 ```r
 my.ts.DT <- DT[, .(date, sales, webvisits)] 
-day.of.year <- as.numeric(format(my.ts.DT[, date][1], '%j'))
+day.of.year <- as.numeric(format(my.ts.DT[, date][1], '%j')) 
 my.ts <- ts(my.ts.DT[, sales], start = c(2014, day.of.year), frequency = 365)
-outliers.tso <- tso(my.ts) # it takes some minutes
-plot(outliers.tso)
+my.ts.weekly <- ts(my.ts.DT[, sales], start = c(1, 1), frequency = 7) # with weekly frequency because ARIMA can not handle multiple seasonalities
 bp.ri <- breakpoints(my.ts ~ 1)
 summary(bp.ri)
 # 
@@ -314,7 +314,7 @@ my.ts.DT[1034]
 # 1: 2016-10-30   273       455
 ```
 
-For further exploration, the `strucchange` package in R is a good starting point.
+For further exploration, other functions of the `strucchange` package in R are a good starting point.
 Example graphs:
 
 ```r
