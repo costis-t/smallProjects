@@ -526,8 +526,8 @@ dev.off()
 
 To find the ideal model for this tutorial, I consider the models of the following table
 
-| Object | Model | specification| External regresor(s) | BIC |
-| ----- | ----------------- | --- |
+| Object | Model | Specification| External regresor(s) | BIC |
+| ----- | ----------------- | --- | --- |
 | `fit.1.sales` | ARIMA((1,1,1)(0,0,1)[7]) with drift | none | 3060.7 |
 | `fit.2.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Visits | 3047.43 |
 | `fit.3.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Campaigns | 3052.71 |

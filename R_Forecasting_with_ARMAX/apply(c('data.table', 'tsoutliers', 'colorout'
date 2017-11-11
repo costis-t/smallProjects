@@ -1,0 +1,207 @@
+tso                 package:tsoutliers                 R Documentation
+
+_A_u_t_o_m_a_t_i_c _P_r_o_c_e_d_u_r_e _f_o_r _D_e_t_e_c_t_i_o_n _o_f _O_u_t_l_i_e_r_s
+
+_D_e_s_c_r_i_p_t_i_o_n:
+
+     These functions are the interface to the automatic detection
+     procedure provided in this package.
+
+_U_s_a_g_e:
+
+     tso(y, xreg = NULL, cval = NULL, delta = 0.7, n.start = 50,
+       types = c("AO", "LS", "TC"), 
+       maxit = 1, maxit.iloop = 4, maxit.oloop = 4, cval.reduce = 0.14286, 
+       discard.method = c("en-masse", "bottom-up"), discard.cval = NULL, 
+       remove.method, remove.cval,
+       tsmethod = c("auto.arima", "arima", "stsm"), 
+       args.tsmethod = NULL, args.tsmodel = NULL, logfile = NULL)
+     
+     tso0(x, xreg = NULL, cval = 3.5, delta = 0.7, n.start = 50,
+       types = c("AO", "LS", "TC"), maxit.iloop = 4, maxit.oloop = 4,
+       discard.method = c("en-masse", "bottom-up"), discard.cval = NULL,   
+       tsmethod = c("auto.arima", "arima", "stsm"), args.tsmethod = NULL,
+       args.tsmodel = NULL, logfile = NULL)
+     
+_A_r_g_u_m_e_n_t_s:
+
+       y: a time series where outliers are to be detected.
+
+       x: a time series or an ‘stsm’ object.
+
+    xreg: an optional matrix of regressors with the same number of rows
+          as ‘y’.
+
+    cval: a numeric. The critical value to determine the significance
+          of each type of outlier.
+
+   delta: a numeric. Parameter of the temporary change type of outlier.
+
+ n.start: a numeric. The number of warming observations added to the
+          input passed to the Kalman filter. Only for ‘tsmethod =
+          "stsm"’.
+
+   types: a character vector indicating the type of outlier to be
+          considered by the detection procedure: innovational outliers
+          (‘"IO"’), additive outliers (‘"AO"’), level shifts (‘"LS"’),
+          temporary changes (‘"TC"’) and seasonal level shifts
+          (‘"SLS"’).
+
+   maxit: a numeric. The maximum number of iterations.
+
+maxit.iloop: a numeric. The maximum number of iterations in the inner
+          loop.  See ‘locate.outliers’.
+
+maxit.oloop: a numeric. The maximum number of iterations in the outer
+          loop.
+
+cval.reduce: a numeric. Factor by which ‘cval’ is reduced if the
+          procedure is run on the adjusted series, if ‘maxit > 1’.
+
+discard.method: a character. The method used in the second stage of the
+          procedure.  See ‘discard.outliers’.
+
+discard.cval: a numeric. The critical value to determine the
+          significance of each type of outlier in the second stage of
+          the procedure (discard outliers). By default it is set equal
+          to ‘cval’. See details.
+
+remove.method: deprecated, argument ‘discard.method’ should be used.
+
+remove.cval: deprecated, argument ‘discard.cval’ should be used.
+
+tsmethod: a character. The framework for time series modelling. It
+          basically is the name of the function to which the arguments
+          defined in ‘args.tsmethod’ are referred to.
+
+args.tsmethod: an optional list containing arguments to be passed to
+          the function invoking the method selected in ‘tsmethod’.
+
+args.tsmodel: an optional list containing the arguments to be passed to
+          ‘stsm.model’. Only for ‘tsmethod = "stsm"’
+     .
+
+ logfile: a character or ‘NULL’. It is the path to the file where
+          tracking information is printed. Ignored if ‘NULL’.
+
+_D_e_t_a_i_l_s:
+
+     Five types of outliers can be considered.  By default: ‘"AO"’
+     additive outliers, ‘"LS"’ level shifts, and ‘"TC"’ temporary
+     changes are selected; ‘"IO"’ innovative outliers and ‘"SLS"’
+     seasonal level shifts can also be selected.
+
+     ‘tso0’ is mostly a wrapper function around the functions
+     ‘locate.outliers’ and ‘discard.outliers’.
+
+     ‘tso’ iterates around ‘tso0’ first for the original series and
+     then for the adjusted series. The process stops if no additional
+     outliers are found in the current iteration or if ‘maxit’
+     iterations are reached.
+
+     ‘tso0’ is an auxiliar function (it is the workhorse for ‘tso’ but
+     it is not intended to be called directly by the user, use
+     ‘tso(maxit = 1, ...)’ instead. ‘tso0’ does not check the arguments
+     since they are assumed to be passed already checked by ‘tso’; the
+     default value for ‘cval’ is not based on the sample size. For the
+     time being, ‘tso0’ is exported in the NAMESPACE since it is
+     convenient for debugging.
+
+     If no value is specified for argument ‘cval’ a default value based
+     on the sample size is used. Let n be the number of observations.
+     If n <= 50 then ‘cval’ is set equal to 3.0; If n >= 450 then
+     ‘cval’ is set equal to 4.0; otherwise ‘cval’ is set equal to 3 +
+     0.0025 * (n - 50).
+
+     If ‘tsmethod’ is ‘NULL’, the following default arguments are used
+     in the function selected in ‘tsmethod’: ‘tsmethod = "auto.arima"’:
+     ‘allowdrift = FALSE’, ‘ic = "bic"’; ‘tsmethod = "arima"’ = ‘order
+     = c(0, 1, 1)’ ‘seasonal = list(order = c(0, 1, 1))’; ‘tsmethod =
+     "stsm"’ = ‘stsm.method = "maxlik.fd.scoring"’, ‘step = NULL’,
+     ‘information = "expected"’.
+
+     If ‘args.tsmethod’ is ‘NULL’, the following lists are used by
+     default, respectively for each method: ‘auto.arima’:
+     ‘list(allowdrift = FALSE, ic = "bic")’; ‘arima’: ‘list(order =
+     c(0, 1, 1), seasonal = list(order = c(0, 1, 1)))’: ‘stsm’:
+     ‘list(stsm.method = "maxlik.fd.scoring", step = NULL, information
+     = "expected"))’.
+
+     ‘xreg’ must be a matrix with time series attributes, ‘tsp’, that
+     must be the same same as ‘tsp(x)’. Column names are also
+     compulsory. If there is only one regressor it may still have
+     non-null dimension, i.e.  it must be a one-column matrix.
+
+     The external regressors (if any) should be defined in the argument
+     ‘xreg’. However, they may be also defined as an element in
+     ‘args.tsmethod’ since this list is passed to function that fits
+     the model. The function ‘tso’ deals with this possibility and
+     returns a warning if ‘"xreg"’ is defined twice with different
+     values. No checks are done in ‘tso0’.
+
+     If ‘tsmethod = "stsm"’, the structural time series model can be
+     defined through argument ‘args.tsmodel’, which is passed to
+     function ‘stsm.model’. By default, the local level model is chosen
+     for series with one sample per unit of time (e.g. annual data) and
+     the basic structural model for seasonal data; ‘ssd = TRUE’ and
+     ‘sgfc = TRUE’.
+
+     If ‘maxit = 1’ the procedure is run only once on the original
+     series. If ‘maxit > 1’ the procedure is run iteratively, first for
+     the original series and then for the adjusted series. The critical
+     value used for the adjusted series may be reduced by the factor
+     ‘cval.reduce’, equal to 0.14286 by default. The new critical value
+     is defined as cval * (1 - cval.reduce).
+
+     By default, the same critical value is used in the first stage of
+     the procedure (location of outliers) and in the second stage
+     (discard outliers).  Under the framework of structural time series
+     models I noticed that the default critical value based on the
+     sample size is too high, since all the potential outliers located
+     in the first stage were discarded in the second stage (even in
+     simulated series with known location of outliers).  In order to
+     investigate this issue, the argument ‘discard.cval’ has been
+     added.  In this way a different critical value can be used in the
+     second stage.  Alternatively, the argument ‘discard.cval’ could be
+     omitted and simply choose a lower critical value, ‘cval’, to be
+     used in both stages. However, using the argument ‘discard.cval’ is
+     more convenient since it avoids locating too many outliers in the
+     first stage.
+
+     ‘discard.cval’ is not affected by ‘cval.reduce’.
+
+_V_a_l_u_e:
+
+     A list of class ‘tsoutliers’.
+
+_R_e_f_e_r_e_n_c_e_s:
+
+     Chen, C. and Liu, Lon-Mu (1993).  ‘Joint Estimation of Model
+     Parameters and Outlier Effects in Time Series’. _Journal of the
+     American Statistical Association_, *88*(421), pp. 284-297.
+
+     Gómez, V. and Maravall, A. (1996).  _Programs TRAMO and SEATS.
+     Instructions for the user_. Banco de España, Servicio de Estudios.
+     Working paper number 9628. <URL:
+     http://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/96/Fich/dt9628e.pdf>
+
+     Gómez, V. and Taguas, D. (1995).  _Detección y Corrección
+     Automática de Outliers con TRAMO: Una Aplicación al IPC de Bienes
+     Industriales no Energéticos_. Ministerio de Economía y Hacienda.
+     Document number D-95006. <URL:
+     http://www.sepg.pap.minhap.gob.es/sitios/sepg/es-ES/Presupuestos/Documentacion/Documents/DOCUMENTOS%20DE%20TRABAJO/D95006.pdf>
+
+_S_e_e _A_l_s_o:
+
+     ‘locate.outliers’, ‘discard.outliers’, ‘plot.tsoutliers’,
+     ‘print.tsoutliers’.
+
+_E_x_a_m_p_l_e_s:
+
+     ## Not run:
+     
+     data("hicp")
+     tso(y = log(hicp[[1]]))
+     ## End(Not run)
+     
+
