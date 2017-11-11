@@ -526,15 +526,15 @@ dev.off()
 
 To find the ideal model for this tutorial, I consider the models of the following table
 
-| Object | Model | Specification| External regresor(s) | BIC |
-| ----- | ----------------- | --- | --- |
-| `fit.1.sales` | ARIMA((1,1,1)(0,0,1)[7]) with drift | none | 3060.7 |
-| `fit.2.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Visits | 3047.43 |
-| `fit.3.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Campaigns | 3052.71 |
-| `fit.4.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Visits and Campaigns | 3042.51 |
-| `fit.5.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Outlier Effects | 3003.57 |
-| `fit.6.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Visits  and Outlier Effects | 3002.02 |
-| `fit.7.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Visits, Campaigns and Outlier Effects | 2993.62 |
+| Object | Model | Series | External regresor(s) | BIC |
+| ----- | ----------------- | --- | --- |  --- |
+| `fit.1.sales` | ARIMA((1,1,1)(0,0,1)[7]) with drift | Web Sales | none | 3060.7 |
+| `fit.2.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Sales | Web Visits | 3047.43 |
+| `fit.3.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Sales | Campaigns | 3052.71 |
+| `fit.4.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Sales | Web Visits and Campaigns | 3042.51 |
+| `fit.5.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Sales | Outlier Effects | 3003.57 |
+| `fit.6.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Sales | Web Visits  and Outlier Effects | 3002.02 |
+| `fit.7.xreg` | ARIMA(1,0,1)(0,0,1)[7] | Web Sales | Web Visits, Campaigns and Outlier Effects | 2993.62 |
 
 For the purposes of accurate work, such analyses are advised to be automated through a [make-type-of-file](https://robjhyndman.com/hyndsight/makefiles/) or a master script and as mentioned above, `stepwise` should be set to `FALSE`.
 Also, note that ARIMA-based intervals are generally too narrow and that historical patterns will repeat for the forecasting period.
