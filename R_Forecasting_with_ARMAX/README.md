@@ -262,7 +262,7 @@ Even in non-optimal cases with 2, 4 or 5 breaks the last break is on 2016-10-30.
 For further exploration, Pesaran and Timmermann propose a calculation for the ideal estimation windows which I skip as it does not seem so critical for the purposes of this tutorial analysis.
 Another possibility would be to consider outlier events, like level shifts.
 There is no need for extensive intervention analysis throughout the series for this analysis, but I briefly indicate how the `tsoutliers` helps us improve the ARIMAX model.
-For more information on `tsoutliers`, please consult its documentison  in [López-de-Lacalle (2016)](https://jalobe.com/doc/tsoutliers.pdf).
+For more information on `tsoutliers`, please consult its documentation in [López-de-Lacalle (2016)](https://jalobe.com/doc/tsoutliers.pdf).
 
 For this simple tutorial analysis, to locate the breaks we work with the `strucchange` package in R.
 ```r
