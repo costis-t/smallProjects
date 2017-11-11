@@ -1,6 +1,7 @@
 # Overview - under editing
-In this sample tutorial, I analyze a sales time-series and I identify whether there is a permanent impact of marketing campaigns on a sales time-series.
-I also forecast the sales time-series for one month with and without an imminent marketing campaing using ARMAX modelling.
+In this sample tutorial, I analyze a sales time-series for an online firm and I identify whether there is a permanent impact of given marketing campaigns on a sales time-series.
+I also forecast the sales time-series for one month with and without an imminent marketing campaing using ARIMAX modelling. 
+Along with the sales time-series, we also have access to the web visits time-series and the dates of the marketing campaigns.
 
 #### Table of Contents
 - [1. R and Data preparation ](#1-r-and-data-preparation)
@@ -29,51 +30,19 @@ This step can be skipped if we have already installed the necessary packages.
 
 
 ```r
-sapply(c('astsa', 'forecastxgb', 'TStools', 'smooth', 'GDMH', 'caret', 'nnet', 'tsoutliers', 'colorout', 'data.table', 'randomNames', 'xtable', 'lubridate', 'compare', 'ggplot2', 'zoo',
-     'scales', 'stringr', 'foreach',  'gridExtra',
-     'colorout', 
-     'tseries', 'urca',
-     # 'CADFtest',
-     'fUnitRoots', 
-     'sos', 
-     'stats', 
-     'lmtest', 
-     #'rasterVis' 
-     # 'bigalgebra', 'bigmemory', 'biglm',
-     'pracma', 
-     'Matrix',# for sparse
-     'slam', 'prophet', 'RcppArmadillo', 'Rcpp', 'padr',
-     'parallel', 'foreach', 'doParallel', 'shiny', #'lineprof',
-     'rbenchmark', 'profvis', 'formula.tools', 'sandwich',
-     'lattice', 'xts', 'imputeTS', 'strucchange', 'car', 'forecast', 'R.utils', 'GGally', 'zoom', 'TSA', 'foreign'
+sapply(c('data.table', 'tsoutliers', 'colorout', 
      ), install.packages) # install packages
 ```
 
 Next, load them with:
 ```r
-sapply(c('astsa', 'forecastxgb', 'TStools', 'smooth', 'GDMH', 'caret', 'nnet', 'tsoutliers', 'colorout', 'data.table', 'randomNames', 'xtable', 'lubridate', 'compare', 'ggplot2', 'zoo',
-     'scales', 'stringr', 'foreach',  'gridExtra',
-     'colorout', 
-     'tseries', 'urca',
-     # 'CADFtest',
-     'fUnitRoots', 
-     'sos', 
-     'stats', 
-     'lmtest', 
-     #'rasterVis' 
-     # 'bigalgebra', 'bigmemory', 'biglm',
-     'pracma', 
-     'Matrix',# for sparse
-     'slam', 'prophet', 'RcppArmadillo', 'Rcpp', 'padr',
-     'parallel', 'foreach', 'doParallel', 'shiny', #'lineprof',
-     'rbenchmark', 'profvis', 'formula.tools', 'sandwich',
-     'lattice', 'xts', 'imputeTS', 'strucchange', 'car', 'forecast', 'R.utils', 'GGally', 'zoom', 'TSA', 'foreign'
+sapply(c('data.table', 'tsoutliers', 'colorout'
      ), require, character.only = TRUE) # load packages
 ```
 
 ## 1.2. Load and prepare the data series
-I have saved the data series as `data/anonymized-forecasting-data.csv`.
-We can confirm this within R (under a Linux OS):
+I have saved the anonymized/fictional data series as `data/anonymized-forecasting-data.csv`.
+We can confirm the file exists within R (under a Linux OS):
 
 ```r
 system('ls data/*.csv')
@@ -109,6 +78,7 @@ Our data sources can have different layouts and some necessary adjustments may b
 In our case, we remove the first index column, `V1`, and we fix the `date` column which currently is read as a string. Among others, converting the numbers from a character string to a `numeric` may also be required for other `.csv` files.
 Of course, we could do the `date` conversion using the appropriate `fread()` option `colClasses` and drop the first column using the `drop` option.
 In the rest of the document I skip such trivial details and I also take similar steps for both of the time-series (`webvisits` and `sales`) to keep the text short.
+
 ```r
 DT[, c('V1', 'date') := .(NULL, as.Date(date))]
 ```
@@ -125,7 +95,9 @@ str(DT)
 I also create a simple time-series plot to see if everything looks fine.
 ```r
 png(file = 'figures/01-simple-sales-graph.pdf')
-ggplot(data = DT, aes(date, sales)) + geom_line() + ggtitle('1. Sales simple graph') + ylab('Sales') + xlab('Date')
+ggplot(data = DT, aes(date, sales)) +
+       geom_line() + ggtitle('1. Sales simple graph') +
+       ylab('Sales') + xlab('Date')
 dev.off()
 ```
 
@@ -133,7 +105,7 @@ dev.off()
 
 ## 1.3. Data quality
 Let's see if we have any missing values; days with no data.
-Create a sequence of dates from the first till the last day of `DT` and compare the lengths of the original dataset to the sequence of dates.
+Create a sequence of dates from the first till the last day of `DT` and compare the lengths of the original dataset to the sequence of dates we just created.
 ```r
 date.grid <- seq(as.Date(min(DT[, date])), as.Date(max(DT[, date])), by = 'day')
 length(date.grid)
@@ -164,11 +136,11 @@ setkeyv(date.grid.DT, c('date'))
 
 DT <- DT[date.grid.DT]
 
-DT[, c('webvisits.withNA', 'sales.withNA') := .(webvisits, sales)]
+DT[, c('webvisits.with.NAs', 'sales.with.NAs') := .(webvisits, sales)]
 DT[, c('webvisits', 'sales') := .(na.kalman(webvisits), na.kalman(sales))]
 
 png(file = 'figures/02-first-150-imputed-values-for-sales-graph.png')
-plotNA.imputations(DT[1:150, sales.withNA], DT[1:150, sales], ylab = 'sales', main = 'Visualization of the Imputed Values')
+plotNA.imputations(DT[1:150, sales.with.NAs], DT[1:150, sales], ylab = 'sales', main = '2. Visualization of the Imputed Values in Sales')
 dev.off()
 ```
 
@@ -182,8 +154,8 @@ Now, we are ready to start our analysis!
 As in theory, there seems to be four components in the time series (trend, cycle, seasonal, random error). 
 Data are very noisy. 
 Ideally, we'd like to have a large increase during and after the marketing campaings, but this does not happen.
-Since there is an intervention variable (Marketing Campains) an ARMAX model seems appropriate. 
-Other instrumental variables (IVs) like the web visits time series can enter the ARMAX, too.
+Since there is an intervention variable (marketing campains) an ARIMAX model seems appropriate. 
+Other exogenous variables like the web visits time series can enter the ARIMAX, too.
 
 The following Figure shows that the `sales` seem to follow: 
  * a parallel movement in 2014-early:2015, 
@@ -193,7 +165,11 @@ The following Figure shows that the `sales` seem to follow:
 This suggest that a regime-switching model could also be appropriate for such data. 
 We don’t see linear, but a polynomial, trend for the whole time-series, which is common for sales data. 
 We also see structural breaks (at least in level and variance) which influences the unit root tests and need further exploration. 
-I follow [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract) and the BIC criterion suggests 3 breaks (four would not make a large difference, thouggh) and confirms the visual perception.
+In the next sections:
+
+* we create a nice figure for the time-series
+* we explore some statistical characteristics (autocorrelation structure, breaks, stationarity, outliers)
+I follow [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract) and the BIC criterion suggests 3 breaks (four would not make a large difference, though) for the whole sales time-series.
 
 ## 2.2. Graph with outliers and smoothing curves
 Let's create a beautiful graph for the data!
@@ -226,7 +202,6 @@ campaign.dates <- data.frame(campaign.start =  c(as.Date('2016-01-23'),
                                                 as.Date('2016-09-23'),
                                                 as.Date('2016-11-29'),
                                                 as.Date('2017-02-03')))
-
 figure <- ggplot(DT) +
           geom_line(aes(x = date, y = sales), colour = 'red', size = 0.1, alpha = 0.7) +
           geom_line(aes(x = date, y = loess(sales ~ c(1:length(sales)), span = 0.3)$fit), colour = 'darkgreen',  size = 1) +
@@ -239,8 +214,7 @@ figure <- ggplot(DT) +
                subtitle = 'Marketing campaign periods are grayed. \nDots correspond to outliers following an uncalibrated Hampel filter.\nIncludes three smoothing functions with different coarseness.',
                y = 'Sales',
                x = 'Date') + 
-          list() # I use + list() in the end as a little trick to add more options at will by commenting/uncommenting the corresponding lines
-      
+          list() # I use + list() in the end as a little trick to add more options at will by commenting/uncommenting the corresponding lines 
 ggsave(filename = 'figures/03-sales-graph.png', plot = figure, height = 90, units = 'mm')
 ```
 
@@ -319,7 +293,6 @@ summary(bp.ri)
 # m   0        1        2        3        4        5       
 # RSS 36382654 13979836 10330573  9390829  9328042  9281676
 # BIC    16010    14860    14506    14404    14410    14418
-
 plot(bp.ri) # for three breaks
 plot(my.ts, type = 'l')
 lines(fitted(bp.ri, breaks = 3), col = 4)
@@ -327,13 +300,16 @@ lines(confint(bp.ri, breaks = 3))
 ```
 
 Hence, for the day of the break, we choose the 1034th day of our time-series which corresponds to 30th of October of 2016:
+
 ```r
 my.ts.DT[1034]
 #          date sales webvisits
 # 1: 2016-10-30   273       455
 ```
+
 For further exploration, the `strucchange` package in R is a good starting point.
 Example graphs:
+
 ```r
 plot(Fstats(my.ts ~ 1))
 plot(efp(my.ts ~ 1, type = 'Rec-CUSUM'))
@@ -344,32 +320,24 @@ The following graph presents the estimation window for the forecast in order to 
 ```r
 my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 365)
 plot.ts(my.ts)
-
 campaign.dates.truncated <- data.frame(
 				   campaign.start =  c(
-						   #                 as.Date('2016-01-23'),
 						   as.Date('2016-09-15'),
 						   as.Date('2016-11-25'),
 						   as.Date('2017-01-25')
 						   ), campaign.end = c(
-						   #                 as.Date('2016-02-01'),
 						   as.Date('2016-09-23'),
 						   as.Date('2016-11-29'),
 						   as.Date('2017-02-03')))
-
-
 figure <-   ggplot(DT[date >= '2016-09-01']) +
 	geom_line(aes(x = date, y = sales), colour = 'red', size = 0.4, alpha = 0.7)  +
 	geom_rect(data = campaign.dates.truncated, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
-
-	#              scale_x_date(  date_minor_breaks = '1 month', date_labels = '%Y',
-	scale_x_date( date_minor_breaks = '1 week',  date_labels = '%m - %Y', # http://strftime.org/
-		     date_breaks = '1 month'                        ) +
-#             geom_point(aes(x = date, y = outliers.NAs)) +
-ggtitle('5. Sales, estimation window') +
-ylab('Sales') + xlab('Date')+
-list()
-
+	scale_x_date(date_minor_breaks = '1 week',  
+	             date_labels = '%m - %Y', # http://strftime.org/
+		         date_breaks = '1 month') +
+    ggtitle('5. Sales, estimation window') +
+    ylab('Sales') + xlab('Date')+
+    list()
 ggsave(filename = 'figures/10-graph-estimation-window.png', plot = figure, height = 100, units = 'mm')
 ```
 
@@ -389,14 +357,12 @@ breakpoints(my.ts ~ 1)
 # 2059(3) 2065(5) 2072(2) 
 ```
 
-To keep this tutorial analysis simple, I consider only one break in mean on 2016-12-25, which I let it enter the ARMAX model as an external regressor and I do not proceed to a BoxCox transformation.
+To keep this tutorial analysis simple, I consider only one break in mean on 2016-12-25, which I let it enter the ARIMAX model as an external regressor and I do not proceed to a BoxCox transformation.
 
 ```r
 estimation.window.DT <- my.ts.DT[date >= '2016-09-01']
 estimation.window.ts <- ts(estimation.window.DT[, sales], start = c(2016, as.integer(strftime('2016-09-01', format = '%j'))), frequency = 365)
-
 outliers.tso <- tso(estimation.window.ts) # it takes some minutes
-
 plot(outliers.tso)
 bp.ri <- breakpoints(estimation.window.ts ~ 1)
 summary(bp.ri)
@@ -451,13 +417,11 @@ adf.test(my.ts, alternative = 'stationary')
 # data:  my.ts
 # Dickey-Fuller = -3.1108, Lag order = 6, p-value = 0.1085 # null of non-stationarity is not rejected at 0.05
 # alternative hypothesis: stationary
-
 pp.test(my.ts)
 #         Phillips-Perron Unit Root Test
 # data:  my.ts
 # Dickey-Fuller Z(alpha) = -131.51, Truncation lag parameter = 4, p-value = 0.01 # null of stationarity is rejected at 0.05
 # alternative hypothesis: stationary
-
 kpss.test(my.ts)
 #         KPSS Test for Level Stationarity
 # 
@@ -518,7 +482,6 @@ my.ts.DT[, campaign := 0]
 my.ts.DT[date >= '2016-09-15' & date <= '2016-09-23', campaign := 1]
 my.ts.DT[date >= '2016-11-25' & date <= '2016-11-29', campaign := 1]
 my.ts.DT[date >= '2017-01-25' & date <= '2017-02-03', campaign := 1]
-
 my.campaigns <-  as.matrix(my.ts.DT[date >= '2016-09-01', campaign], start = c(2014, 245), frequency = 365)
 my.campaigns <-  as.matrix(my.ts.DT[date >= '2016-09-01', campaign])
 ```
@@ -554,9 +517,7 @@ my.estimation.window.outliers
 # 2   TC  89 2016:333   573.2  5.657
 # 3   LS 117 2016:361   218.4 10.595
 # 4   TC 152  2017:31   487.0  4.859
-
 estimation.window.outlier.effects <- ts(my.estimation.window.outliers$effects, start = c(2016, as.integer(strftime('2016-09-01', format = '%j'))), frequency = 365)
-
 png(file = 'figures/15-estimation-window-outliers.png')
 ts.plot(my.estimation.window.outliers$effects, main = '5. Estimation window outliers')
 dev.off()
@@ -592,7 +553,6 @@ fit.2.xreg
 # 
 # sigma^2 estimated as 14575:  log likelihood=-1507.24
 # AIC=3026.48   AICc=3026.83   BIC=3047.43
-
 fit.3.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = my.campaigns)
 fit.3.xreg 
 # Series: estimation.window.sales 
@@ -605,7 +565,6 @@ fit.3.xreg
 # 
 # sigma^2 estimated as 15004:  log likelihood=-1504.4
 # AIC=3024.8   AICc=3025.41   BIC=3052.71
-
 fit.4.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = cbind(estimation.window.webvisits, my.campaigns))
 fit.4.xreg 
 # Series: estimation.window.sales 
@@ -621,7 +580,6 @@ fit.4.xreg
 # 
 # sigma^2 estimated as 13246:  log likelihood=-1493.79
 # AIC=3007.58   AICc=3008.53   BIC=3042.51
-
 fit.5.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  my.estimation.window.outliers$effects)
 fit.5.xreg 
 # Series: estimation.window.sales 
@@ -634,8 +592,6 @@ fit.5.xreg
 # 
 # sigma^2 estimated as 12108:  log likelihood=-1485.3
 # AIC=2982.61   AICc=2982.96   BIC=3003.57
-
-
 fit.6.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  cbind(estimation.window.outlier.effects, estimation.window.webvisits))
 fit.6.xreg 
 # Series: estimation.window.sales 
@@ -651,8 +607,6 @@ fit.6.xreg
 # 
 # sigma^2 estimated as 12092:  log likelihood=-1484.53
 # AIC=2981.06   AICc=2981.42   BIC=3002.02
-
-
 fit.7.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  cbind(estimation.window.outlier.effects, estimation.window.webvisits, my.campaigns))
 fit.7.xreg 
 # Series: estimation.window.sales 
@@ -690,17 +644,11 @@ To forecast the sales with the selected ARIMAX model, we must first forecast the
 ```r
 fit.webvisits <- auto.arima(estimation.window.webvisits, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE)
 forecasted.webvisits <- forecast(fit.webvisits, h = 30)$mean
-
 forecasted.marketing.campaigns <- rep(0, 30)
-
-forecasted.outlier.effects <- rep(estimation.window.outlier.effects[length(estimation.window.outlier.effects)], 30)
-
+forecasted.outlier.effects < rep(estimation.window.outlier.effects[length(estimation.window.outlier.effects)], 30)
 future.external.regressors <- cbind(forecasted.outlier.effects, forecasted.webvisits, forecasted.marketing.campaigns) # the order of the regressors must be the same as in fit.7.xreg!
-
 fit.forecast <- forecast(fit.7.xreg , xreg = cbind(forecasted.webvisits, forecasted.marketing.campaigns, forecasted.outlier.effects)) 
-
 plot(forecast(fit.7.xreg, xreg = future.external.regressors, h = 30))
-
 forecast.DT <- data.table(date = seq(as.Date(min(estimation.window.DT[, date])), as.Date(max(DT[, date])) + 30, by = 'day'),
 sales = c(estimation.window.DT[, sales], rep(NA, 30)),
 webvisits = c(estimation.window.DT[, sales], rep(NA, 30)),
@@ -718,7 +666,7 @@ ggplot(forecast.DT) +
                subtitle = 'Marketing campaign periods are grayed. \nForecasted Sales are shown in red along with a 95% prediction interval.',
                y = 'Sales',
                x = 'Date') + 
-          list() 
+    list() 
 ```
 
 ### 3.2 With a new marketing campaign
@@ -728,19 +676,12 @@ For simplicity we will consider this campaign identical to the last campaign in 
 ```r
 fit.webvisits <- auto.arima(estimation.window.webvisits, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE)
 forecasted.webvisits <- forecast(fit.webvisits, h = 30)$mean
-
 length.of.the.January.campaign <- length(seq(as.Date(campaign.dates[4, ]$campaign.start), as.Date(campaign.dates[4, ]$campaign.end), by = 'day'))
-
 forecasted.marketing.campaigns <- c(rep(0, 6), rep(1, length.of.the.January.campaign), rep(0, 30 - 6 - length.of.the.January.campaign))
-
 forecasted.outlier.effects <- rep(estimation.window.outlier.effects[length(estimation.window.outlier.effects)], 30)
-
 future.external.regressors <- cbind(forecasted.outlier.effects, forecasted.webvisits, forecasted.marketing.campaigns) # the order of the regressors must be the same as in fit.7.xreg!
-
 fit.forecast <- forecast(fit.7.xreg , xreg = cbind(forecasted.webvisits, forecasted.marketing.campaigns, forecasted.outlier.effects)) 
-
 plot(forecast(fit.7.xreg, xreg = future.external.regressors, h = 30))
-
 forecast.DT <- data.table(date = seq(as.Date(min(estimation.window.DT[, date])), as.Date(max(DT[, date])) + 30, by = 'day'),
 sales = c(estimation.window.DT[, sales], rep(NA, 30)),
 webvisits = c(estimation.window.DT[, sales], rep(NA, 30)),
