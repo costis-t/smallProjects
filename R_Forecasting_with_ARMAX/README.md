@@ -271,7 +271,7 @@ my.ts.DT <- DT[, .(date, sales, webvisits)]
 day.of.year <- as.numeric(format(my.ts.DT[, date][1], '%j')) 
 my.ts <- ts(my.ts.DT[, sales], start = c(2014, day.of.year), frequency = 365)
 my.ts.weekly <- ts(my.ts.DT[, sales], start = c(1, 1), frequency = 7) # with weekly frequency because ARIMA can not handle multiple seasonalities
-bp.ri <- breakpoints(my.ts ~ 1)
+bp.ri <- breakpoints(my.ts.weekly ~ 1)
 summary(bp.ri)
 # 
 #          Optimal (m+1)-segment partition: 
@@ -318,14 +318,14 @@ For further exploration, other functions of the `strucchange` package in R are a
 Example graphs:
 
 ```r
-plot(Fstats(my.ts ~ 1))
-plot(efp(my.ts ~ 1, type = 'Rec-CUSUM'))
-plot(efp(my.ts ~ 1, type = 'OLS-CUSUM'))
+plot(Fstats(my.ts.weekly.frequency ~ 1))
+plot(efp(my.ts.weekly.frequency ~ 1, type = 'Rec-CUSUM'))
+plot(efp(my.ts.weekly.frequency ~ 1, type = 'OLS-CUSUM'))
 ```
 
 The following graph presents the estimation window for the forecast in order to have a better view of the data series.
 ```r
-my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 365)
+my.ts.weekly.frequency <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 365)
 plot.ts(my.ts)
 campaign.dates.truncated <- data.frame(
 				   campaign.start =  c(
@@ -352,10 +352,10 @@ ggsave(filename = 'figures/10-graph-estimation-window.png', plot = figure, heigh
 Following  [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract), the estimation window contains 3 breaks:
 
 ```r
-breakpoints(my.ts ~ 1)
+breakpoints(my.ts.weekly.frequency ~ 1)
 #          Optimal 4-segment partition: 
 # Call:
-# breakpoints.formula(formula = my.ts ~ 1)
+# breakpoints.formula(formula = my.ts.weekly.frequency ~ 1)
 # 
 # Breakpoints at observation number:
 # 74 118 164 
@@ -740,7 +740,7 @@ Sales and Web Visits, although non-stationary, seem to be cointegrated by the Jo
 Hence, with a clear cointegration relation we could also forecast using vector autoregression (VAR/VECM/etc.). 
 For futher analysis, consult [Harris and Sollis(2002)](http://eu.wiley.com/WileyCDA/WileyTitle/productCd-0470844434.html).
 ```r
-my.ts <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 7)
+my.ts.weekly.frequency <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 7)
 my.webvisits <-  as.matrix(my.ts.DT[date >= '2016-09-01', webvisits], start = c(2014, 245), frequency = 7)
 
 my.matrix <- as.matrix(cbind(my.ts, my.webvisits))
