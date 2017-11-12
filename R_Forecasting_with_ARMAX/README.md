@@ -266,18 +266,25 @@ For more information on `tsoutliers`, please consult its documentation in [Lópe
 
 For this simple tutorial analysis, to locate the breaks we work with the `strucchange` package in R.
 Also, I do not consider decomposing seasonality with sophisticated methods, e.g. using the  `Rlibeemd` R package.
+Moreover, I consider the time-series with yearly and weekly seasonal frequency and I create the  `sales.ts.yearly.frequency`, `webvisits.ts.yearly.frequency` and `ts.weekly.frequency`, `sales.ts.weekly.frequency`, `webvisits.ts.weekly.frequency` respectively, because it is important for the ARIMA modeling.
+
 ```r
-my.ts.DT <- DT[, .(date, sales, webvisits)] 
-day.of.year <- as.numeric(format(my.ts.DT[, date][1], '%j')) 
-my.ts <- ts(my.ts.DT[, sales], start = c(2014, day.of.year), frequency = 365)
-my.ts.weekly <- ts(my.ts.DT[, sales], start = c(1, 1), frequency = 7) # with weekly frequency because ARIMA can not handle multiple seasonalities
-bp.ri <- breakpoints(my.ts.weekly ~ 1)
+ts.DT <- DT[, .(date, sales, webvisits)] 
+day.of.year <- as.numeric(format(ts.DT[, date][1], '%j')) 
+sales.yearly.frequency <- ts(ts.DT[, sales], start = c(2014, day.of.year), frequency = 365.25)
+sales.weekly.frequency <- ts(ts.DT[, sales], start = c(1, 1), frequency = 7) # with weekly frequency because ARIMA can not handle multiple seasonalities
+webvisits.yearly.frequency <- ts(ts.DT[, webvisits], start = c(2014, day.of.year), frequency = 365.25)
+webvisits.weekly.frequency <- ts(ts.DT[, webvisits], start = c(1, 1), frequency = 7)
+```
+
+Now we can detect the break points.
+```r
+bp.ri <- breakpoints(sales.yearly.frequency ~ 1) # using different seasonal frequency does not make a difference
 summary(bp.ri)
-# 
 #          Optimal (m+1)-segment partition: 
 # 
 # Call:
-# breakpoints.formula(formula = my.ts ~ 1)
+# breakpoints.formula(formula = sales.yearly.frequency ~ 1)
 # 
 # Breakpoints at observation number:
 #                             
@@ -301,7 +308,7 @@ summary(bp.ri)
 # RSS 36382654 13979836 10330573  9390829  9328042  9281676
 # BIC    16010    14860    14506    14404    14410    14418
 plot(bp.ri) # for three breaks
-plot(my.ts, type = 'l')
+plot(sales.yearly.frequency, type = 'l')
 lines(fitted(bp.ri, breaks = 3), col = 4)
 lines(confint(bp.ri, breaks = 3))
 ```
@@ -309,7 +316,7 @@ lines(confint(bp.ri, breaks = 3))
 Hence, for the day of the break, we choose the 1034th day of our time-series which corresponds to 30th of October of 2016:
 
 ```r
-my.ts.DT[1034]
+ts.DT[1034]
 #          date sales webvisits
 # 1: 2016-10-30   273       455
 ```
@@ -318,16 +325,23 @@ For further exploration, other functions of the `strucchange` package in R are a
 Example graphs:
 
 ```r
-plot(Fstats(my.ts.weekly.frequency ~ 1))
-plot(efp(my.ts.weekly.frequency ~ 1, type = 'Rec-CUSUM'))
-plot(efp(my.ts.weekly.frequency ~ 1, type = 'OLS-CUSUM'))
+plot(Fstats(sales.yearly.frequency ~ 1))
+plot(efp(sales.yearly.frequency ~ 1, type = 'Rec-CUSUM'))
+plot(efp(sales.yearly.frequency ~ 1, type = 'OLS-CUSUM'))
 ```
-
-The following graph presents the estimation window for the forecast in order to have a better view of the data series.
+Following  [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract), the estimation window contains 3 breaks with BIC 14404 as shown above from `summary(bp.ri)`.
+To keep this tutorial analysis simple but not too simple, I consider only one break in mean on 2016-12-25, which I let (or not) enter the ARIMAX model as an external regressor (using the non-adjusted sales time-series as I explain below) and I do not proceed to a BoxCox transformation.
+Ideally, we should also proceed to out-of-sample tests (also known as training/test set differences) and cross-validation but this is out of the scope of this tutorial.
+I arbitrarily set the start of the estimation window about 4 months before the break in mean, on 01 September 2016.
+Figure 5 presents the estimation window used to identify the ARIMA specification and proceed to the forecast in order to have a better view of the data series.
 ```r
-my.ts.weekly.frequency <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 365)
-plot.ts(my.ts)
-campaign.dates.truncated <- data.frame(
+day.of.year <- as.numeric(format(as.Date('2016-09-01'), '%j')) 
+day.of.year
+# [1] 245
+sales.est.window.weekly.frequency <- ts(ts.DT[date >= '2016-09-01', sales], start = c(1, 1), frequency = 7)
+sales.est.window.yearly.frequency <- ts(ts.DT[date >= '2016-09-01', sales], start = c(2016, 245), frequency = 365.25)
+autoplot(sales.est.window.yearly.frequency)
+campaign.dates.truncated <- data.frame( # campaign.dates for the estimation window
 				   campaign.start =  c(
 						   as.Date('2016-09-15'),
 						   as.Date('2016-11-25'),
@@ -336,103 +350,39 @@ campaign.dates.truncated <- data.frame(
 						   as.Date('2016-09-23'),
 						   as.Date('2016-11-29'),
 						   as.Date('2017-02-03')))
-figure <-   ggplot(DT[date >= '2016-09-01']) +
+figure <- ggplot(DT[date >= '2016-09-01']) +
 	geom_line(aes(x = date, y = sales), colour = 'red', size = 0.4, alpha = 0.7)  +
 	geom_rect(data = campaign.dates.truncated, aes(xmin = campaign.start, xmax = campaign.end, ymin = -Inf, ymax = Inf), alpha = 0.4) +
 	scale_x_date(date_minor_breaks = '1 week',  
-	             date_labels = '%m - %Y', # http://strftime.org/
+	             date_labels = '%m - %Y', # http://strftime.org
 		         date_breaks = '1 month') +
     ggtitle('5. Sales, estimation window') +
-    ylab('Sales') + xlab('Date')+
+    ylab('Sales') + xlab('Date') +
     list()
 ggsave(filename = 'figures/10-graph-estimation-window.png', plot = figure, height = 100, units = 'mm')
 ```
 
 ![Sales Estimation Window](figures/10-graph-estimation-window.png)
-Following  [Bai and Perron (2003)](http://onlinelibrary.wiley.com/doi/10.1002/jae.659/abstract), the estimation window contains 3 breaks:
-
-```r
-breakpoints(my.ts.weekly.frequency ~ 1)
-#          Optimal 4-segment partition: 
-# Call:
-# breakpoints.formula(formula = my.ts.weekly.frequency ~ 1)
-# 
-# Breakpoints at observation number:
-# 74 118 164 
-# 
-# Corresponding to breakdates:
-# 2059(3) 2065(5) 2072(2) 
-```
-
-To keep this tutorial analysis simple, I consider only one break in mean on 2016-12-25, which I let it enter the ARIMAX model as an external regressor and I do not proceed to a BoxCox transformation.
-
-```r
-estimation.window.DT <- my.ts.DT[date >= '2016-09-01']
-estimation.window.ts <- ts(estimation.window.DT[, sales], start = c(2016, as.integer(strftime('2016-09-01', format = '%j'))), frequency = 365)
-outliers.tso <- tso(estimation.window.ts) # it takes some minutes
-plot(outliers.tso)
-bp.ri <- breakpoints(estimation.window.ts ~ 1)
-summary(bp.ri)
-#          Optimal (m+1)-segment partition: 
-# 
-# Call:
-# breakpoints.formula(formula = estimation.window.ts ~ 1)
-# 
-# Breakpoints at observation number:
-#                          
-# m = 1         116        
-# m = 2         116 164    
-# m = 3      74 118 164    
-# m = 4   46 82 118 164    
-# m = 5   46 82 118 164 200
-# 
-# Corresponding to breakdates:
-#                                                                            
-# m = 1                                     2016.98356164384                 
-# m = 2                                     2016.98356164384 2017.11506849315
-# m = 3                    2016.86849315069 2016.98904109589 2017.11506849315
-# m = 4   2016.79178082192 2016.8904109589  2016.98904109589 2017.11506849315
-# m = 5   2016.79178082192 2016.8904109589  2016.98904109589 2017.11506849315
-#                         
-# m = 1                   
-# m = 2                   
-# m = 3                   
-# m = 4                   
-# m = 5   2017.21369863014
-# 
-# Fit:
-#                                                    
-# m   0       1       2       3       4       5      
-# RSS 7382873 4716773 4383379 4140361 4101369 4096778
-# BIC    3209    3111    3104    3101    3110    3121
-plot(bp.ri) # BIC indicates three breaks
-plot(estimation.window.ts, type = 'l')
-lines(fitted(bp.ri, breaks = 3), col = 4)
-lines(confint(bp.ri, breaks = 3))
-estimation.window.DT[116]
-#          date sales webvisits
-# 1: 2016-12-25   151       346
-```
 
 
 ### 2.3.3. Stationarity
 We must also perform stationarity tests (see `adf.test()`, `pp.test()`, `kpss.test()` of the `tseries` package in R).
 The series are non-stationary for the whole period and the selected estimation window.
 ```r
-adf.test(my.ts, alternative = 'stationary')
+adf.test(sales.est.window.weekly.frequency, alternative = 'stationary')
 #         Augmented Dickey-Fuller Test
-# data:  my.ts
+# data:  sales.est.window.weekly.frequency
 # Dickey-Fuller = -3.1108, Lag order = 6, p-value = 0.1085 # null of non-stationarity is not rejected at 0.05
 # alternative hypothesis: stationary
-pp.test(my.ts)
+pp.test(sales.est.window.weekly.frequency)
 #         Phillips-Perron Unit Root Test
-# data:  my.ts
+# data:  sales.est.window.weekly.frequency
 # Dickey-Fuller Z(alpha) = -131.51, Truncation lag parameter = 4, p-value = 0.01 # null of stationarity is rejected at 0.05
 # alternative hypothesis: stationary
-kpss.test(my.ts)
+kpss.test(sales.est.window.weekly.frequency)
 #         KPSS Test for Level Stationarity
 # 
-# data:  my.ts
+# data:  sales.est.window.weekly.frequency
 # KPSS Level = 2.8092, Truncation lag parameter = 3, p-value = 0.01 # null of stationarity is rejected at 0.05
 ```
 
@@ -450,12 +400,10 @@ Setting the `stepwise` option as `TRUE` forces a fast stepwise selection.
 For real-life work this option should be set as `FALSE`, but for the purposes of this tutorial `TRUE` is fine. 
 ### ARIMA
 ```r
-estimation.window.DT <- my.ts.DT[date >= '2016-09-01']
-estimation.window.sales <- ts(estimation.window.DT[, sales], start = c(2016, as.integer(strftime('2016-09-01', format = '%j'))), frequency = 365)
-estimation.window.webvisits <- ts(estimation.window.DT[, webvisits], start = c(2016, as.integer(strftime('2016-09-01', format = '%j'))), frequency = 365)
-fit.1.sales <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 2, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 2, trace = FALSE, stepwise = TRUE, max.order = 20, allowmean = TRUE, ic = 'bic')
+
+fit.1.sales <- auto.arima(sales.est.window.weekly.frequency, max.p = 7, max.q = 7, max.d = 2, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 2, trace = FALSE, stepwise = TRUE, max.order = 20, allowmean = TRUE, ic = 'bic')
 fit.1.sales
-# Series: estimation.window.sales 
+# Series: sales.est.window.weekly.frequency 
 # ARIMA(1,1,1)(0,0,1)[7] with drift 
 # 
 # Coefficients:
@@ -485,12 +433,12 @@ First, we create the matrix of the external regressors.
 Let's try to incorporate the marketing campains.
 
 ```r
-my.ts.DT[, campaign := 0]
-my.ts.DT[date >= '2016-09-15' & date <= '2016-09-23', campaign := 1]
-my.ts.DT[date >= '2016-11-25' & date <= '2016-11-29', campaign := 1]
-my.ts.DT[date >= '2017-01-25' & date <= '2017-02-03', campaign := 1]
-my.campaigns <-  as.matrix(my.ts.DT[date >= '2016-09-01', campaign], start = c(2014, 245), frequency = 365)
-my.campaigns <-  as.matrix(my.ts.DT[date >= '2016-09-01', campaign])
+ts.DT[, campaign := 0]
+ts.DT[date >= '2016-09-15' & date <= '2016-09-23', campaign := 1]
+ts.DT[date >= '2016-11-25' & date <= '2016-11-29', campaign := 1]
+ts.DT[date >= '2017-01-25' & date <= '2017-02-03', campaign := 1]
+my.campaigns <-  as.matrix(ts.DT[date >= '2016-09-01', campaign], start = c(2014, 245), frequency = 365)
+my.campaigns <-  as.matrix(ts.DT[date >= '2016-09-01', campaign])
 ```
 The following, also suggests we have 4 outliers in our estimation window:
 1. An additive outliwer on the 22nd day.
@@ -548,9 +496,9 @@ Also, note that ARIMA-based intervals are generally too narrow and that historic
 
 
 ```r
-fit.2.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = estimation.window.webvisits)
+fit.2.xreg <- auto.arima(sales.est.window.weekly.frequency, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = webvisits.est.window.weekly.frequency)
 fit.2.xreg 
-# Series: estimation.window.sales 
+# Series: sales.est.window.weekly.frequency 
 # Regression with ARIMA(1,0,1)(0,0,1)[7] errors 
 # 
 # Coefficients:
@@ -560,9 +508,9 @@ fit.2.xreg
 # 
 # sigma^2 estimated as 14575:  log likelihood=-1507.24
 # AIC=3026.48   AICc=3026.83   BIC=3047.43
-fit.3.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = my.campaigns)
+fit.3.xreg <- auto.arima(sales.est.window.weekly.frequency, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = my.campaigns)
 fit.3.xreg 
-# Series: estimation.window.sales 
+# Series: sales.est.window.weekly.frequency 
 # Regression with ARIMA(2,1,2)(0,0,1)[7] errors 
 # 
 # Coefficients:
@@ -572,24 +520,24 @@ fit.3.xreg
 # 
 # sigma^2 estimated as 15004:  log likelihood=-1504.4
 # AIC=3024.8   AICc=3025.41   BIC=3052.71
-fit.4.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = cbind(estimation.window.webvisits, my.campaigns))
+fit.4.xreg <- auto.arima(sales.est.window.weekly.frequency, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg = cbind(webvisits.est.window.weekly.frequency, my.campaigns))
 fit.4.xreg 
-# Series: estimation.window.sales 
+# Series: sales.est.window.weekly.frequency 
 # Regression with ARIMA(2,0,2)(1,0,1)[7] errors 
 # 
 # Coefficients:
 #          ar1      ar2      ma1     ma2    sar1     sma1  intercept
 #       1.3192  -0.6133  -1.1015  0.4989  0.8554  -0.7496    79.5246
 # s.e.  0.2656   0.2137   0.2757  0.2161  0.1105   0.1326    54.7130
-#       estimation.window.webvisits  my.campaigns
+#       webvisits.est.window.weekly.frequency  my.campaigns
 #                            0.5844      173.0715
 # s.e.                       0.0913       31.7842
 # 
 # sigma^2 estimated as 13246:  log likelihood=-1493.79
 # AIC=3007.58   AICc=3008.53   BIC=3042.51
-fit.5.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  my.estimation.window.outliers$effects)
+fit.5.xreg <- auto.arima(sales.est.window.weekly.frequency, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  my.estimation.window.outliers$effects)
 fit.5.xreg 
-# Series: estimation.window.sales 
+# Series: sales.est.window.weekly.frequency 
 # Regression with ARIMA(0,0,1)(1,0,1)[7] errors 
 # 
 # Coefficients:
@@ -599,31 +547,31 @@ fit.5.xreg
 # 
 # sigma^2 estimated as 12108:  log likelihood=-1485.3
 # AIC=2982.61   AICc=2982.96   BIC=3003.57
-fit.6.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  cbind(estimation.window.outlier.effects, estimation.window.webvisits))
+fit.6.xreg <- auto.arima(sales.est.window.weekly.frequency, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  cbind(estimation.window.outlier.effects, webvisits.est.window.weekly.frequency))
 fit.6.xreg 
-# Series: estimation.window.sales 
+# Series: sales.est.window.weekly.frequency 
 # Regression with ARIMA(0,0,1)(0,0,1)[7] errors 
 # 
 # Coefficients:
 #          ma1    sma1  intercept  estimation.window.outlier.effects
 #       0.2440  0.1619   201.4675                             0.7719
 # s.e.  0.0572  0.0623    38.4975                             0.0980
-#       estimation.window.webvisits
+#       webvisits.est.window.weekly.frequency
 #                            0.2430
 # s.e.                       0.0755
 # 
 # sigma^2 estimated as 12092:  log likelihood=-1484.53
 # AIC=2981.06   AICc=2981.42   BIC=3002.02
-fit.7.xreg <- auto.arima(estimation.window.sales, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  cbind(estimation.window.outlier.effects, estimation.window.webvisits, my.campaigns))
+fit.7.xreg <- auto.arima(sales.est.window.weekly.frequency, max.p = 7, max.q = 7, max.d = 3, seasonal = TRUE, max.P = 7, max.Q = 7, max.D = 3, trace = TRUE, stepwise = TRUE, max.order = 20, allowmean = TRUE, xreg =  cbind(estimation.window.outlier.effects, webvisits.est.window.weekly.frequency, my.campaigns))
 fit.7.xreg 
-# Series: estimation.window.sales 
+# Series: sales.est.window.weekly.frequency 
 # Regression with ARIMA(0,0,1)(1,0,1)[7] errors 
 # 
 # Coefficients:
 #          ma1    sar1     sma1  intercept  estimation.window.outlier.effects
 #       0.2084  0.8657  -0.7524   189.8716                             0.6979
 # s.e.  0.0588  0.1090   0.1426    41.3306                             0.0995
-#       estimation.window.webvisits  my.campaigns
+#       webvisits.est.window.weekly.frequency  my.campaigns
 #                            0.2567      105.1177
 # s.e.                       0.0777       27.1298
 # 
@@ -649,7 +597,7 @@ To forecast the sales with the selected ARIMAX model, we must first forecast the
 * the outliers (without a new marketing campaign, this corresponds to the the level shift, wich is the last value of the `estimation.window.outlier.effects`)
 
 ```r
-fit.webvisits <- auto.arima(estimation.window.webvisits, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE)
+fit.webvisits <- auto.arima(webvisits.est.window.weekly.frequency, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE)
 forecasted.webvisits <- forecast(fit.webvisits, h = 30)$mean
 forecasted.marketing.campaigns <- rep(0, 30)
 forecasted.outlier.effects < rep(estimation.window.outlier.effects[length(estimation.window.outlier.effects)], 30)
@@ -681,7 +629,7 @@ For this case, we will consider a new marketing campaign during the second week 
 For simplicity we will consider this campaign identical to the last campaign in late January, i.e. we will use the same impulse as the new outlier.
 
 ```r
-fit.webvisits <- auto.arima(estimation.window.webvisits, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE)
+fit.webvisits <- auto.arima(webvisits.est.window.weekly.frequency, max.p = 7, max.q = 7, max.d = 1, seasonal = TRUE)
 forecasted.webvisits <- forecast(fit.webvisits, h = 30)$mean
 length.of.the.January.campaign <- length(seq(as.Date(campaign.dates[4, ]$campaign.start), as.Date(campaign.dates[4, ]$campaign.end), by = 'day'))
 forecasted.marketing.campaigns <- c(rep(0, 6), rep(1, length.of.the.January.campaign), rep(0, 30 - 6 - length.of.the.January.campaign))
@@ -708,8 +656,8 @@ ggplot(forecast.DT) +
                x = 'Date') + 
           list() 
 ```
-outlier.mydata <- tso(estimation.window.sales)
-outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))
+outlier.mydata <- tso(sales.est.window.weekly.frequency)
+outliers.effects(outlier.mydata$outliers, n = length(sales.est.window.weekly.frequency))
 
 tstat <- outliers.tstatistics(coefs2poly(fit.1.sales), residuals(fit.1.sales))
 which(abs(tstat[,"LS","tstat"]) > 3.5)
@@ -717,20 +665,20 @@ resid <- residuals(fit)
 pars <- coefs2poly(fit)
 tstats <- outliers.tstatistics(pars, resid)
 
-outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"]
-tc <- rep(0, length(outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"]))
+outliers.effects(outlier.mydata$outliers, n = length(sales.est.window.weekly.frequency))[, "TC152"]
+tc <- rep(0, length(outliers.effects(outlier.mydata$outliers, n = length(sales.est.window.weekly.frequency))[, "TC152"]))
 tc[152] <- 1
-cor(filter(tc, filter = 0, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
-cor(filter(tc, filter = 0.3, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
-cor(filter(tc, filter = 0.5, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
-cor(filter(tc, filter = 0.7, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
-cor(filter(tc, filter = 0.8, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
-cor(filter(tc, filter = 0.9, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
-cor(filter(tc, filter = 0.7, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(estimation.window.sales))[, "TC152"])
+cor(filter(tc, filter = 0, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(sales.est.window.weekly.frequency))[, "TC152"])
+cor(filter(tc, filter = 0.3, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(sales.est.window.weekly.frequency))[, "TC152"])
+cor(filter(tc, filter = 0.5, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(sales.est.window.weekly.frequency))[, "TC152"])
+cor(filter(tc, filter = 0.7, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(sales.est.window.weekly.frequency))[, "TC152"])
+cor(filter(tc, filter = 0.8, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(sales.est.window.weekly.frequency))[, "TC152"])
+cor(filter(tc, filter = 0.9, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(sales.est.window.weekly.frequency))[, "TC152"])
+cor(filter(tc, filter = 0.7, method = 'recursive'), outliers.effects(outlier.mydata$outliers, n = length(sales.est.window.weekly.frequency))[, "TC152"])
 #
 
-all.equal(as.numeric(filter(tc, filter = 0.7, method = 'recursive')), outliers.effects(outlier.chicken$outliers, n = length(estimation.window.sales))[, "TC152"])
-identical(as.numeric(filter(tc, filter = 0.7, method = 'recursive')), outliers.effects(outlier.chicken$outliers, n = length(estimation.window.sales))[, "TC152"])
+all.equal(as.numeric(filter(tc, filter = 0.7, method = 'recursive')), outliers.effects(outlier.chicken$outliers, n = length(sales.est.window.weekly.frequency))[, "TC152"])
+identical(as.numeric(filter(tc, filter = 0.7, method = 'recursive')), outliers.effects(outlier.chicken$outliers, n = length(sales.est.window.weekly.frequency))[, "TC152"])
 
 ## 4. Decision making
 
@@ -740,8 +688,8 @@ Sales and Web Visits, although non-stationary, seem to be cointegrated by the Jo
 Hence, with a clear cointegration relation we could also forecast using vector autoregression (VAR/VECM/etc.). 
 For futher analysis, consult [Harris and Sollis(2002)](http://eu.wiley.com/WileyCDA/WileyTitle/productCd-0470844434.html).
 ```r
-my.ts.weekly.frequency <- ts(my.ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 7)
-my.webvisits <-  as.matrix(my.ts.DT[date >= '2016-09-01', webvisits], start = c(2014, 245), frequency = 7)
+sales.weekly.frequency <- ts(ts.DT[date >= '2016-09-01', sales], start = c(2014, 245), frequency = 7)
+my.webvisits <-  as.matrix(ts.DT[date >= '2016-09-01', webvisits], start = c(2014, 245), frequency = 7)
 
 my.matrix <- as.matrix(cbind(my.ts, my.webvisits))
 summary(ca.jo(my.matrix))
