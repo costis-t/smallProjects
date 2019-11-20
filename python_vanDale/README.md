@@ -3,7 +3,53 @@
 Contains rough out-dated instructions.
 
 ## Reason
-I learn Dutch so when I study texts I want to have a custom dictionary for the unknown words. 
+Speaking Greek is pretty much useless ahahah, so I learn Dutch. 
+When I study Dutch texts I want to have a custom dictionary for my unknown words.
+This way I learn the unknown Dutch words fast.
+
+## Usage
+Given the `sample.wordlist` which contains one word per line, the script creates the `sample.tex` which can then be imported into a `.tex` file to produce a `.pdf`.
+
+Most words have multiple meanings. 
+For instance, *week* can mean, among others, a week (7 consecutive days) or weak/soft.
+To reduce clutter I only include in my `.pdf` the first *n characters* which is usually the first characters of the first meaning.
+To see all the meanings, I also include hyperlinks under each word to online dictionaries.
+
+### Sample word list
+![sample_wordlist.png](https://github.com/costis-t/smallProjects/blob/master/python_vanDale/sample_wordlist.png)
+
+### Sample PDF
+![sample_pdf.png](https://github.com/costis-t/smallProjects/blob/master/python_vanDale/sample_pdf.png)
+
+### Sample TeX file
+
+```tex
+\documentclass{article}
+
+\usepackage{geometry}
+\usepackage{multicol}
+\usepackage{hyperref}
+
+\geometry{
+ a4paper,
+ %total={170mm,257mm},
+ left=5mm,
+ right=5mm,
+ top=5mm,
+ bottom=5mm
+ }
+\hypersetup{
+    colorlinks=true,      
+    urlcolor=black
+}
+
+\begin{document}
+
+\input{sample.tex}
+
+\end{document}
+```
+
 
 ## Script
 Needs a lot of refactoring, it started just as a simple for 5-line for loop but I added somes featuress which made it really dirty 
@@ -95,45 +141,4 @@ for filename in wordlist_files:
     tex_filename = re.sub(".wordlist", ".tex", filename)
     print(f"\input{{{tex_filename}}}")
 ```
-
-## Usage
-Given the `sample.wordlist` creates the `sample.tex` which then can be imported into a `.tex` file to produce a `.pdf`.
-
-Most words have multiple meanings. 
-For instance, week can mean, among others, a week (7 consecutive days) or weak/soft.
-Hence, I include hyperlinks to online dictionaries.
-
-### Sample TeX file
-
-```tex
-\documentclass{article}
-
-\usepackage{geometry}
-\usepackage{multicol}
-\usepackage{hyperref}
-
-\geometry{
- a4paper,
- %total={170mm,257mm},
- left=5mm,
- right=5mm,
- top=5mm,
- bottom=5mm
- }
-\hypersetup{
-    colorlinks=true,      
-    urlcolor=black
-}
-
-\begin{document}
-
-\input{sample.tex}
-
-\end{document}
-```
-### Sample word list
-![sample_wordlist.png](https://github.com/costis-t/smallProjects/blob/master/python_vanDale/sample_wordlist.png)
-
-### Sample PDF
-![sample_pdf.png](https://github.com/costis-t/smallProjects/blob/master/python_vanDale/sample_pdf.png)
 
