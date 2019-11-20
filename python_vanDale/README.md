@@ -118,4 +118,39 @@ for filename in wordlist_files:
 ```
 
 ## Usage
-Given the `sample.wordlist` creates the `input.tex` which then can be imported into a `.tex` file.
+Given the `sample.wordlist` creates the `sample.tex` which then can be imported into a `.tex` file to produce a `.pdf`.
+
+Most words have multiple meanings. 
+For instance, week can mean, among others, a week (7 consecutive days) or weak/soft.
+Hence, I include hyperlinks to online dictionaries.
+
+### Sample TeX file
+
+```tex
+\documentclass{article}
+
+\usepackage{geometry}
+\usepackage{multicol}
+\usepackage{hyperref}
+
+\geometry{
+ a4paper,
+ %total={170mm,257mm},
+ left=5mm,
+ right=5mm,
+ top=5mm,
+ bottom=5mm
+ }
+\hypersetup{
+    colorlinks=true,      
+    urlcolor=black
+}
+
+\begin{document}
+
+\input{sample.tex}
+
+\end{document}
+```
+
+
