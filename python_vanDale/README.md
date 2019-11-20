@@ -135,5 +135,5 @@ Hence, I include hyperlinks to online dictionaries.
 ![sample_wordlist.png](https://github.com/costis-t/smallProjects/blob/master/python_vanDale/sample_wordlist.png)
 
 ### Sample PDF
-![sample_pdf.png](https://github.com/costis-t/smallProjects/blob/master/python_vanDale/sample_pdf.pngss)
+![sample_pdf.png](https://github.com/costis-t/smallProjects/blob/master/python_vanDale/sample_pdf.png)
 
