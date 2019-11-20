@@ -18,30 +18,9 @@ import re
 import glob
 from googletrans import Translator
 
-#word = 'plantsoen'
-#url = "https://www.vandale.nl/gratis-woordenboek/nederlands-engels/vertaling/" + word
-
-#word_list = ['opgebeld']
-
-#word = 'staatssecrsestari'
-#url_nederlands = "https://www.vandale.nl/gratis-woordenboek/nederlands/betekenis/" + word
-#response_nederlands = requests.get(url_nederlands)
-#soup_nederlands = BeautifulSoup(response_nederlands.text)
-#my_soup_nederlands = soup_nederlands.find('div', {'class': 'snippets'}).find('span')
-
-#url_english = "https://www.vandale.nl/gratis-woordenboek/nederlands-engels/vertaling/" + word
-#response_english = requests.get(url_english)
-#soup_english = BeautifulSoup(response_english.text)
-#my_soup_english = soup_english.find('div', {'class': 'snippets'}).find('span')
-
-#def tex_string(word, meaning):
-    #return(f"\\item \\makebox[35mm][l]{{\\textbf{{{word}}}}} \\parbox[t][][t]{{55mm}}{{{meaning}\\ldots}}\n")
-
-#tex_string(word = bold_word, meaning = rest_first_line[0:61])
-
 translator = Translator()
 
-wordlist_files = glob.glob('*.wordlist')
+wordlist_files = glob.glob('sample.wordlist')
 for filename in wordlist_files:
     tex_filename = re.sub(".wordlist", ".tex", filename)
     word_list = [word for line in open(filename, 'r') for word in line.split()]
@@ -90,9 +69,9 @@ for filename in wordlist_files:
                                 f.write(f"\\item \\parbox[t][][t]{{35mm}}{{\\textbf{{{bold_word}}}\\\\\\href{{https://www.vandale.nl/gratis-woordenboek/nederlands/betekenis/{word}}}{{\\tiny NL}}{{\\tiny, }}\\href{{https://www.vandale.nl/gratis-woordenboek/nederlands-engels/vertaling/{word}}}{{\\tiny EN}}{{\\tiny, }}\\href{{https://www.wordreference.com/nlen/{word}}}{{\\tiny WR}}{{\\tiny, }}\\href{{https://translate.google.com/\\#view=home\\&op=translate\\&sl=nl\\&tl=en\\&text={word}}}{{\\tiny G}}}} \\parbox[t][][t]{{55mm}}{{{rest_first_line}\\\\{second_line[0:61]}\\ldots}}\n")
                                 print(f"\\item \\parbox[t][][t]{{35mm}}{{\\textbf{{{bold_word}}}\\\\\\href{{https://www.vandale.nl/gratis-woordenboek/nederlands/betekenis/{word}}}{{\\tiny NL}}{{\\tiny, }}\\href{{https://www.vandale.nl/gratis-woordenboek/nederlands-engels/vertaling/{word}}}{{\\tiny EN}}{{\\tiny, }}\\href{{https://www.wordreference.com/nlen/{word}}}{{\\tiny WR}}{{\\tiny, }}\\href{{https://translate.google.com/\\#view=home\\&op=translate\\&sl=nl\\&tl=en\\&text={word}}}{{\\tiny G}}}} \\parbox[t][][t]{{55mm}}{{{rest_first_line}\\\\{second_line[0:61]}\\ldots}}\n")
                             else:
-                                second_line = re.search('\d(.+?$)', my_soup_english.text).group(1)
+                                second_line = re.sub('\d+', '', re.search('\d(.+?$)', my_soup_english.text).group(1))
                                 f.write(f"\\item \\parbox[t][][t]{{35mm}}{{\\textbf{{{bold_word}}}\\\\\\href{{https://www.vandale.nl/gratis-woordenboek/nederlands/betekenis/{word}}}{{\\tiny NL}}{{\\tiny, }}\\href{{https://www.vandale.nl/gratis-woordenboek/nederlands-engels/vertaling/{word}}}{{\\tiny EN}}{{\\tiny, }}\\href{{https://www.wordreference.com/nlen/{word}}}{{\\tiny WR}}{{\\tiny, }}\\href{{https://translate.google.com/\\#view=home\\&op=translate\\&sl=nl\\&tl=en\\&text={word}}}{{\\tiny G}}}} \\parbox[t][][t]{{55mm}}{{{rest_first_line}\\\\{second_line[0:61]}\\ldots}}\n")
-                                print(f"\\item \\parbox[t][][t]{{35mm}}{{\\textbf{{{bold_word}}}\\\\\\href{{https://www.vandale.nl/gratis-woordenboek/nederlands/betekenis/{word}}}{{\\tiny NL}}{{\\tiny, }}\\href{{https://www.vandale.nl/gratis-woordenboek/nederlands-engels/vertaling/{word}}}{{\\tiny EN}}{{\\tiny, }}\\href{{https://www.wordreference.com/nlen/{word}}}{{\\tiny WR}}{{\\tiny, }}\\href{{https://translate.google.com/\\#view=home\\&op=translate\\&sl=nl\\&tl=en\\&text={word}}}{{\\tiny G}}}} \\parbox[t][][t]{{55mm}}{{{rest_first_line}\\\\{second_line[0:61]}\\ldots}}\n")
+                                print(f"\\item \\parbox[t][][t]{{35mm}}{{\\textbf{{{bold_word}}}\\\\\\href{{https://www.vandale.nl/gratis-woordenboek/nederlands/betekenis/{word}}}{{\\tiny NL}}{{\\tiny, }}\\href{{https://www.vandale.nl/gratis-woordenboek/nederlands-engels/vertaling/{word}}}{{\\tiny EN}}{{\\tiny, }}\\href{{https://www.wordreference.com/nlen/{word}}}{{\\tiny WR}}{{\\tiny, }}\\href{{https://translate.google.csom/\\#view=home\\&op=translate\\&sl=nl\\&tl=en\\&text={word}}}{{\\tiny G}}}} \\parbox[t][][t]{{55mm}}{{{rest_first_line}\\\\{second_line[0:61]}\\ldots}}\n")
                                 
             else:
                 first_line_with_numbers = re.search('(^.+?)\s\d', my_soup_nederlands.text).group(1)
@@ -152,5 +131,9 @@ Hence, I include hyperlinks to online dictionaries.
 
 \end{document}
 ```
+### Sample word list
+![sample_wordlist.png](https://github.com/costis-t/smallProjects/blob/master/python_vanDale/sample_wordlist.png)
 
+### Sample PDF
+![sample_pdf.png](https://github.com/costis-t/smallProjects/blob/master/python_vanDale/sample_pdf.pngss)
 
