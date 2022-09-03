@@ -89,8 +89,8 @@ and the `f_sink_output` function of the above script merely transforms it to thi
 flags: START_CORKED state: RUNNING muted:no app:"Google Chrome"
 ```
 
-[video][1]
-[![consumption_reduction][2]]
+I activated the timer on 30 August, and I can already see a nice consumption reduction with the help of [Enelogic](https://enelogic.com/) which tracks smart meters for free.
+![image search api](https://github.com/costis-t/smallProjects/blob/master/energy_savings/images/Screenshot_20220904_004345.png)
 
 
 
