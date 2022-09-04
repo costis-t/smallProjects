@@ -1,27 +1,26 @@
 # Turn on speakers only when system needs them
-It's a pity that the recent electricity bill hikes urged me to become more environmentally friendly than I already was, but better late than never...
+It's a pity that the recent electricity bill hikes urged me to become more environmentally friendly than I already was, but better late than never.
 
-I decided to explorer how I can reduce my power consumption apart from the obvious ways.
-To my surprise, I discovered  that the PC speakers consume around ~40 Watt per hour. 
+I decided to explore how I can reduce my power consumption apart from the obvious ways.
+To my surprise, I discovered that my speakers consume around ~42 Watt per hour. 
 That's a lot!
 
-I have them plugged in as a slave device in a Master-Slave power strip with my PC as a Master, so they are only turned on when my system is turned on.
+I have them plugged in as a slave device in a Master-Slave power strip with my workstation as the Master, so they are only turned on when my system is turned on.
 Nevertheless, I only use them for a few hours per day, when I take a call or listen to music while I work, say for 4 hours per day.
 With the old electricity rates, I was paying around 0.25 Euro per KWh, while with the new around 0.75.
 
-Assuming that I have my system turned on for about 14 hours per day, I was previously paying around $\frac{40 \cdot 14 \cdot 365}{1000} \cdot 0.25 \simeq 54.9$ Euro per year.
-Now, I will have  to pay $\frac{40 \cdot 12 \cdot 365}{1000} \cdot 0.75 \simeq 164.8$ Euro per year.
-This is unacceptable for just a few hours of use.
-Of course, headphones would be a good option, but I like the freedom of movement.
+Assuming that I have my system turned on for about 14 hours per day, I was previously paying around $\frac{42 \cdot 14 \cdot 365}{1000} \cdot 0.25 \simeq 53.67$ Euro per year.
+Now, I will have  to pay $\frac{42 \cdot 14 \cdot 365}{1000} \cdot 0.75 \simeq 160.97$ Euro per year.
+This is unacceptable for just a few hours of daily use.
 
 
-I decided to create a [systemd timer][1] to monitor whenever my applications produce sound.
-Then, I use a [smart socket](https://solution.tuya.com/projects/CMa4p001lsjhns) with [Home Assistant][2] to turn the power on and off depending on whether the applications produce sound.
+I decided to create a [systemd timer][1] to monitor whenever my applications produce audio.
+Then, I use a [smart socket](https://solution.tuya.com/projects/CMa4p001lsjhns) with a custom file sensor for [Home Assistant][2] to turn the power on and off depending on whether the applications produce sound.
 
-The bash script below shows an example with the Google Chrome browser for how one can filter the output of 
+The bash script below shows an example for how one can filter the output of 
 `pacmd list-sink-inputs` with [AWK](https://en.wikipedia.org/wiki/AWK), [sed](https://en.wikipedia.org/wiki/Sed), 
 [grep](https://en.wikipedia.org/wiki/Grep), [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) and 
-[pipelines](https://en.wikipedia.org/wiki/Pipeline_(Unix)):
+[pipelines](https://en.wikipedia.org/wiki/Pipeline_(Unix)), when the Google Chrome browser produces audio:
 ```bash
 #!/bin/bash
 
@@ -41,7 +40,7 @@ else
     echo '0' > /tmp/sound_playing
 fi
 ```
-The output of `pacmd list-sink-inputs` when PC speakers are being used by the system is this one:
+The output of `pacmd list-sink-inputs` when the speakers are being used by the system is this one:
 ```bash
 1 sink input(s) available.
     index: 65
@@ -81,6 +80,7 @@ and the `f_sink_output` function of the above script merely transforms it to thi
 ```
 flags: START_CORKED state: RUNNING muted: no application.name: "Google Chrome"
 ```
+You can watch a demonstration on [YouTube](https://www.youtube.com/watch?v=qeeKuwXsRtk).
 
 I activated the timer on 30 August, and I can already see a nice consumption reduction with the help of [Enelogic](https://enelogic.com/) which tracks smart meters for free.
 ![image search api](https://github.com/costis-t/smallProjects/blob/master/energy_savings/images/Screenshot_20220904_004345.png)
