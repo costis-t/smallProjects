@@ -18,4 +18,4 @@ sue.o: sue.cpp sue.h story.h config.h
 	g++ -c sue.cpp
 
 clean:
-	rm *.o baccarat simulation_million.csv simulation_million.output
+	rm *.o baccarat simulation_million.csv simulation_million.output .simulation.py.swp
