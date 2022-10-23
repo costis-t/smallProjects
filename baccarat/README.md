@@ -5,7 +5,7 @@ Distributed under the [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html) License
 
 # About The Game
 I made this game to refresh my simple C++ skills.
-This project was made with fun optimization as its focus; it's not optimized for embedded systems, compilation time, etc...
+This project was made with personal fun optimization as its focus; it's not optimized for embedded systems, compilation time, etc...
 It is my own work, but I made it after acquiring a lot of insights and knowledge from variuos sources.
 
 Special thanks to the authors of these books:
@@ -65,7 +65,7 @@ The game's resulting probabilities are consistent with various online sources, l
 ## Output
 ### Without story
 ```
-$ ./baccarat
+$ ./baccarat --without-story
 +++++++++++++++
 Player Hand       Banker Hand       Outcome       
 3, Queen, 3       9, 4, Queen       Player wins   
@@ -75,7 +75,7 @@ Player Hand       Banker Hand       Outcome
 
 ### Ugly output format
 ```
-$ ./baccarat
+$ ./baccarat --ugly-format
 PHand - BHand - Outcome
 3,3 - 7,Q - BANKER
 ```
@@ -171,6 +171,7 @@ Player Hand       Banker Hand       Outcome
 `--._,--'"`--._,--'"`--._,--'"`--._,--'
 `--._,--'"`--. GAME OVER --'"`--._,--'"
 `--._,--'"`--._,--'"`--._,--'"`--._,--'
+
 ```
 
 # Future
