@@ -42,7 +42,7 @@ rm baccarat; g++ main.cpp game.cpp story.cpp sue.cpp -o baccarat
 ## Usage
 
 The game has three modes:
-* **Story mode (default).** This is alternative to verbose output. It builds suspence (!), explains what the game does and urges the player to think of the outcome before it appears on the screen.
+* **Story mode (default).** This is alternative to verbose output. It builds suspense (!), explains what the game does and urges the player to think of the outcome before it appears on the screen.
 ```sh 
 ./baccarat
 ```
