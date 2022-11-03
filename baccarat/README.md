@@ -6,7 +6,7 @@ Distributed under the [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html) License
 # About The Game
 I made this game to refresh my simple C++ skills.
 This project was made with personal fun optimization as its focus; it's not optimized for embedded systems, compilation time, etc...
-It is my own work, but I made it after acquiring a lot of insights and knowledge from variuos sources.
+It is my own work, but I made it after acquiring a lot of insights and knowledge from various sources.
 
 Special thanks to the authors of these books:
 * Scott Meyers, 2014, [Effective Modern C++](https://www.oreilly.com/library/view/effective-modern-c/9781491908419/), O'Reilly Media
