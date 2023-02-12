@@ -1,0 +1,46 @@
+= LoyalBooks Audiobook Downloader
+:source-highlighter: Rouge
+:toc:
+
+== Motivation
+It's nice to listen to Audiobooks in Dutch when I travel!
+The zipped public domain MP3s from http://www.loyalbooks.com[LoyalBooks] are great, but are hundreds of MB each and downloading each one is tedious.
+
+== Description
+It creates a bash script `wget_commands.bash` to download the audiobooks using https://www.gnu.org/software/wget/[wget].
+The filenames include the book author, title and original `.zip` filename with this pattern: `<book author>_-_<book title>_::_<original filename from loyalbooks>.zip`.
+The destination folder is `./downloaded_audiobooks/`.
+It has only been tested for Dutch, but other languages should work, too.
+This repo has the bash script for the Dutch language ready.
+
+== Usage
+[source, shell]
+----
+$ python main.py <language> <pages>
+----
+
+== Example Output
+Help:
+[source,shell]
+----
+$ python main.py --help
+usage: main.py [-h] language pages
+
+LoyalBooks audiobook downloader
+
+positional arguments:
+  language    Language of audiobooks
+  pages       Pages to crawl
+
+options:
+  -h, --help  show this help message and exit
+----
+
+Example for audiobooks in Dutch:
+[source,shell]
+----
+$ python main.py Dutch 7
+Writing http://www.archive.org/download/eline_vere_cj_0810_librivox/eline_vere_cj_0810_librivox_64kb_mp3.zip
+Writing http://www.archive.org/download/middelpunt_aarde_0906_librivox/middelpunt_aarde_0906_librivox_64kb_mp3.zip
+[and so on...]
+----

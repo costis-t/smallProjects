@@ -1,0 +1,51 @@
+= Read cells from spreadsheets
+:source-highlighter: Rouge
+:toc:
+
+== Motivation
+I want to read specific cells from large Excel files of over 50 MB.
+Opening, checking the specific cells, and closing each spreadsheet (or 10 of spreadsheets) is time consuming.
+I measured that for 108 spreadsheets I needed to consume ~45 minutes of my time.
+This script prints the relevant cells in the command line, while I can do more useful tasks. :bulb:
+
+== Usage
+[source, shell]
+----
+$ python main.py <filename_pattern> <start_cell> <end_cell>
+----
+
+== Example Output
+Help:
+[source,shell]
+----
+$ python main_oop.py --h
+usage: main_oop.py [-h] pattern start end
+
+Excel cell helper
+
+positional arguments:
+  pattern     Filename pattern
+  start       Range: start cell
+  end         Range: end cell
+
+options:
+  -h, --help  show this help message and exit
+----
+
+Example with the sample spreadsheets:
+[source,shell]
+----
+$ python main.py 'spreadsheet*.xlsx' 8 9
+--------------------
+spreadsheet_01.xlsx
+--------------------
+Project Name: A name
+Project Status: Completed
+
+
+--------------------
+spreadsheet_02.xlsx
+--------------------
+Project Name: Another name
+Project Status: Started
+----
