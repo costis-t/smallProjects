@@ -1,3 +1,32 @@
 == Contents
 
 Contains complete or incomplete little projects.
+
+Ordered by recency.
+
+=== https://github.com/costis-t/smallProjects/tree/master/Dutch_audiobook_downloader_for_loyalbooks[Dutch_audiobook_downloader_for_loyalbooks]
+Download all public domain Dutch audiobooks from http://www.loyalbooks.com[Loyal Books].
+
+=== https://github.com/costis-t/smallProjects/tree/master/microsoft_ecosystem_helpers/read_cells_from_spreadsheets[microsoft_ecosystem_helpers/read_cells_from_spreadsheets]
+Increases work productivity.
+
+=== https://github.com/costis-t/smallProjects/tree/master/energy_savings[energy_savings]
+How I save ~260 kWh per year by automatically turning on and off my speakers.
+
+=== https://github.com/costis-t/smallProjects/tree/master/language_learning_paths[language_learning_paths]
+This is an ingenious work in progress. I hope I can complete and document it within 2023.
+
+=== https://github.com/costis-t/smallProjects/tree/master/SR_TMOI_GradientDescent[SR_TMOI_GradientDescent]
+A small exercise in R and C++ comparing performance of R, RcppEigen and RcppArmadillo. Not sure the figure is correct... :D
+
+=== https://github.com/costis-t/smallProjects/tree/master/baccarat[baccarat]
+An exercise for an autoplayable text card game in C++.
+
+=== https://github.com/costis-t/smallProjects/tree/master/python_vanDale[python_vanDale]
+Pretty cool custom dictionary making script from multiple sources. Outputs LaTeX.
+
+=== https://github.com/costis-t/smallProjects/tree/master/R_Dynamics_in_a_Cohort_Analysis[R_Dynamics_in_a_Cohort_Analysis]
+Exercise with traveling and marketing data. Parts of code are censored or kept private. Data are anonymized and randomized. Documentation is incomplete.
+
+=== https://github.com/costis-t/smallProjects/tree/master/R_Forecasting_with_ARMAX[R_Forecasting_with_ARMAX]
+Exercise with traveling and marketing data. Parts of code are censored or kept private. Data are anonymized and randomized. Documentation is incomplete.
