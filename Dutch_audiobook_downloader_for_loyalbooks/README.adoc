@@ -8,7 +8,7 @@ The zipped public domain MP3s from http://www.loyalbooks.com[LoyalBooks] are gre
 
 == Description
 It creates a bash script `wget_commands.bash` to download the audiobooks using https://www.gnu.org/software/wget/[wget].
-The filenames include the book author, title and original `.zip` filename with this pattern: `<book author>_-_<book title>_::_<original filename from loyalbooks>.zip`.
+The filenames include the book author, title and original `.zip` filename with this pattern: `<book author>\_-_<book title>_::_<original filename from loyalbooks>.zip`.
 The destination folder is `./downloaded_audiobooks/`.
 It has only been tested for Dutch, but other languages should work, too.
 This repo has the bash script for the Dutch language ready.
