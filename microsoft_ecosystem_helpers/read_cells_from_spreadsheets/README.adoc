@@ -18,8 +18,8 @@ $ python main.py <filename_pattern> <start_cell> <end_cell>
 Help:
 [source,shell]
 ----
-$ python main_oop.py --h
-usage: main_oop.py [-h] pattern start end
+$ python main.py --h
+usage: main.py [-h] pattern start end
 
 Excel cell helper
 

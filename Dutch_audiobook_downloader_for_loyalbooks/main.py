@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from typing import List
 
-# Command pattern?
+# Command
 class DownloadCommand:
     def __init__(self, url: str, subfolder: str, book_author: str, book_title: str, filename: str):
         self.url = url
