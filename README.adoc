@@ -20,7 +20,7 @@ An exercise for an autoplayable card text game in C++.
 This is an ingenious work in progress. I hope I can complete and document it within 2023.
 
 === https://github.com/costis-t/smallProjects/tree/master/SR_TMOI_GradientDescent[SR_TMOI_GradientDescent]
-A small exercise in R and C++ comparing performance of R, RcppEigen and RcppArmadillo. Not sure the figure is correct... :D
+A small exercise in R and C++, comparing performance of R, RcppEigen and RcppArmadillo. Not sure if the figure is correct... :D
 
 === https://github.com/costis-t/smallProjects/tree/master/python_vanDale[python_vanDale]
 Pretty cool custom dictionary making script from multiple sources. Outputs LaTeX.
